@@ -1,0 +1,102 @@
+﻿using System;
+using System.Linq.Expressions;
+using System.Web.Mvc;
+using BaseWeb.Models;
+using BaseWeb.Services;
+
+namespace BaseWeb.Helpers
+{
+    public static class XgTextHelper
+    {
+
+        /// <summary>
+        /// 文字欄位, 含 error msg
+        /// </summary>
+        /// <param name="htmlHelper"></param>
+        /// <param name="fid"></param>
+        /// <param name="placeHolder "></param>
+        /// <param name="ftype"></param>
+        /// <returns></returns>
+        //public static IHtmlContent XgText(this IHtmlHelper htmlHelper, string fid, string value = "", int maxLength = 0, string placeHolder ="", string ftype = "")
+        public static IHtmlContent XgText(this IHtmlHelper htmlHelper, string fid, string value = "", string title = "", int maxLen = 0, bool required = false, int inputCols = 10, PropTextModel prop = null)
+        {
+            return GetStr(fid, value, title, maxLen, required, inputCols, prop);
+        }
+
+        /// <summary>
+        /// binding model
+        /// </summary>
+        /// <typeparam name="TModel"></typeparam>
+        /// <typeparam name="TProperty"></typeparam>
+        /// <param name="htmlHelper"></param>
+        /// <param name="expression"></param>
+        /// <param name="placeHolder"></param>
+        /// <param name="ftype">regular expression type: mobile</param>
+        /// <returns></returns>
+        public static IHtmlContent XgTextFor<TModel, TProperty>(this IHtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression, string title = "", int maxLen = 0, bool required = false, int inputCols = 10, PropTextModel prop = null)
+        {
+            //讀取欄位 id, value
+            var metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            var fid = metadata.PropertyName;
+            var value = metadata.Model == null ? "" : metadata.Model.ToString();
+            return GetStr(fid, value, title, maxLen, required, inputCols, prop);
+        }
+
+        /// <summary>
+        /// return html string for render
+        /// </summary>
+        /// <param name="fid"></param>
+        /// <param name="value"></param>
+        /// <param name="maxLen"></param>
+        /// <param name="placeHolder"></param>
+        /// <returns></returns>
+        private static IHtmlContent GetStr(string fid, string value, string title, int maxLen, bool required, int inputCols, PropTextModel prop)
+        {
+            //placeholder可能會包含單引號, 所以escape處理(")
+            if (prop == null)
+                prop = new PropTextModel();
+
+            //attr
+            var attr = _Helper.GetBaseProp(fid, prop);
+            attr += (prop.IsPwd) ? " type='password'" : " type='text'";
+            attr += " value='" + value + "'";
+            if (maxLen > 0)
+                attr += " maxlength='" + maxLen + "'";
+            if (prop.PlaceHolder != "")
+                attr += " placeholder='" + prop.PlaceHolder + "'";
+
+            //class
+            var extClass = required ? _WebFun.XdRequired : "";
+            if (prop.ExtClass != "")
+                extClass = " " + prop.ExtClass;
+
+            //考慮這個輸入欄位可能放在 datatable裡面(無title) !!
+            //在container放一個 xg-input-box, 在 _datatable.css 會設定高度為 100%
+            //會顯示紅色錯誤框的element 必須在 error label 上面且相鄰 !!
+            var html = string.Format(@"
+<div class='xg-input-box {0}' style='width:{1}; text-align:left;' >
+    <input{2} class='form-control {3}'>
+    <span data-id2='{4}' class='{5}'></span>
+</div>
+", prop.BoxClass, prop.Width, attr, extClass, fid + _WebFun.ErrTail, _WebFun.ErrLabCls);
+
+            //外面加上一層title
+            if (!prop.InDt && title != "")
+            {
+                var required2 = _WebFun.GetLabelRequired(required);
+                html = string.Format(@"
+<div class='row xg-form-row'>
+    <div class='col-md-{0} col-sm-12 xg-form-label'>{2}{3}</div>
+    <div class='col-md-{1} col-sm-12 xg-form-input'>
+        {4}
+    </div>
+</div>
+", prop.TitleCols, inputCols, title, required2, html);
+            }
+
+            //html = String.Format(html, attr, value, extClass, fid + _WebFun.Error, _WebFun.ErrorLabelClass);
+            return new HtmlString(html);
+        } 
+
+    }//class
+}

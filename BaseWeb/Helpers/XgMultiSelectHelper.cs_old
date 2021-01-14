@@ -1,0 +1,110 @@
+﻿using System;
+using System.Collections.Generic;
+using Base.Models;
+using System.Linq.Expressions;
+using System.Web.Mvc;   //必須using MVC
+using Base.Services;
+using BaseWeb.Services;
+
+namespace BaseWeb.Helpers
+{
+    /// <summary>
+    /// 單選下拉式欄位, 包含多欄位
+    /// </summary>
+    public static class zz_XgMultiSelectHelper
+    {
+        /// <summary>
+        /// 下拉式欄位, 使用 bootstrap-select
+        /// </summary>
+        /// <param name="htmlHelper"></param>
+        /// <param name="fid">欄位 id</param>
+        /// <param name="value">欄位 value</param>
+        /// <param name="rows">data source</param>
+        /// <param name="columns">欄位數, 0表示單欄</param>
+        /// <param name="seperator">value分隔字元, null表示單選, 有值表示多選</param>
+        /// <param name="className">自訂 class name</param>
+        /// <param name="onClickFn">callback function for onClick</param>
+        /// <returns></returns>
+        //public static IHtmlContent XgMultiSelect(this IHtmlHelper htmlHelper, string fid, string value, List<KeyValueModel> rows, char seperator, string placeHolder = "", int columns = 0, string className = "", string onClickFn = "")
+        public static IHtmlContent XgMultiSelect(this IHtmlHelper htmlHelper, string fid, string value, List<IdStrModel> rows, Select2PropModel prop = null)
+        {
+            return GetStr(fid, value, rows, prop);
+        }
+
+        public static IHtmlContent XgMultiSelectFor<TModel, TProperty>(this IHtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression, List<IdStrModel> rows, Select2PropModel prop = null)
+        {
+            //讀取欄位 id
+            var metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            var fid = metadata.PropertyName;
+            var value = metadata.Model != null ? metadata.Model.ToString() : "";
+            return GetStr(fid, value, rows, prop);
+        }
+
+        private static IHtmlContent GetStr(string fid, string value, List<IdStrModel> rows, Select2PropModel prop = null)
+        {
+            //for multiple select only
+            if (prop == null)
+                prop = new Select2PropModel();
+
+            var htmlRow = "";
+            var list = "";
+            var selected = "";
+            int i;
+            //var multiSelect = (seperator != null);
+            var title = "";
+
+            //多選欄位: 其值的內容為陣列, 所以使用時有以下限制 :
+            //1.不可使用binding
+            //2.select 欄位 id為 xxx_tmp, 放一個hidden欄位, id為傳入id
+            //option text for 顯示button文字內容, data-value表示checkbox代表的欄位值 !!
+            var values = _Str.ToList(value, (char)prop.Separator);
+            htmlRow = @"
+<option {2} style='padding-left:10px;' value='{0}' data-content=""
+<div>
+    <span class='glyphicon glyphicon-ok xg-select-check {2}'></span>
+    <span>{1}</span>
+</div>
+"">{1}</option>
+";
+
+            //        <label><input type='checkbox' value='{0}' {2} onclick='_tool.onClickCheckMulti(this, ""{3}"", ""{0}"", ""{4}"", ""{5}"")'/>{1}</label>
+            var len = (rows == null) ? 0 : rows.Count;
+            for (i = 0; i < len; i++)
+            {
+                if (values.Contains(rows[i].Id))
+                {
+                    title += rows[i].Str + ",";
+                    selected = "selected";
+                }
+                else
+                {
+                    selected = "";
+                }
+                list += String.Format(htmlRow, rows[i].Id, rows[i].Str, selected);
+            }
+            //設定多選欄位的顯示value
+            if (title != "")
+                title = "title='" + title.Substring(0, title.Length - 1) + "'";
+
+            //寬度必須為 data-width='100%' 才會有 RWD效果 !!
+            //用class來控制多欄位 !!
+            //會顯示紅色錯誤框的element 必須在 error label 上面且相鄰  !!
+            var html = @"
+<div style='width:100%'>
+	<input type='hidden' id='{0}' name='{0}' value='{1}'>
+    <select multiple id='{0}_tmp' data-show-content='false' data-tick-icon='' {5}> 
+        {2}
+    </select>
+    <span id='{3}' class='{4}'></span>
+</div>
+";
+            //get select property string
+            //var prop2 = _Helper.GetSelectProp(prop, title);
+            var prop2 = _Helper.GetSelectProp(prop);
+
+            html = String.Format(html, fid, value, list, fid + _WebFun.ErrTail, _WebFun.ErrLabCls, prop2);
+            return new HtmlString(html);
+        } 
+
+    }
+}

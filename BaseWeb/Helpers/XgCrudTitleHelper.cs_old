@@ -1,0 +1,56 @@
+﻿using Base.Services;
+using BaseWeb.Models;
+using System;
+using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace BaseWeb.Helpers
+{
+    //配合 _xp.js
+    public static class XgCrudTitleHelper
+    {
+        /// <summary>
+        /// program title: left(path), right(tool)
+        /// </summary>
+        /// <param name="helper"></param>
+        /// <param name="names">prog path list</param>
+        /// <param name="status">按鈕狀態(0/1), 依次為:展開,查詢,匯出,新增</param>
+        /// <returns></returns>
+        public static IHtmlContent XgCrudTitle(this IHtmlHelper helper, string[] names, string status, CrudTbarDto tbar = null)
+        {
+            if (tbar == null)
+                tbar = new CrudTbarDto();
+
+            //var rb = _Locale.RB;
+            var nameStr = names[0];
+            for (var i=1; i< names.Length; i++)
+                nameStr += " / " + names[i];
+
+            //set toolbar buttons
+            status = _Str.TailChar(4, status);
+            var btnStr = "";
+            if (status.Substring(0, 1) == "1")
+                btnStr += string.Format("<button type='button' class='btn btn-default' onclick='{0}' style='margin-right:5px;'>{1}<i class='icon-find2'></i></button>", tbar.FnOnFind2, rb.BtnFind2);
+            if (status.Substring(1, 1) == "1")
+                btnStr += string.Format("<button type='button' class='btn btn-primary' onclick='{0}' style='margin-right:5px;'>{1}<i class='icon-find'></i></button>", tbar.FnOnFind, rb.BtnFind);
+            if (status.Substring(2, 1) == "1")
+                btnStr += string.Format("<button type='button' class='btn btn-primary' onclick='{0}' style='margin-right:5px;'>{1}<i class='icon-excel'></i></button>", tbar.FnOnExport, rb.BtnExport);
+            if (status.Substring(3, 1) == "1")
+                btnStr += string.Format("<button type='button' class='btn btn-success' onclick='{0}' style='margin-right:5px;'>{1}<i class='icon-plus'></i></button>", tbar.FnOnCreate, rb.BtnCreate);
+
+            //class name: xg-prog-path
+            var html = @"
+<div class='row' style='padding: 5px 15px 0 0;'>
+    <div class='col-md-6 xg-left'>
+        <div class='xg-prog-path'>{0}</div>
+    </div>
+    <div id='divReadTool' class='col-md-6 xg-right'>
+        {1}
+    </div>
+</div>
+";
+            return new HtmlString(String.Format(html, nameStr, btnStr));
+        }
+
+    } //class
+}

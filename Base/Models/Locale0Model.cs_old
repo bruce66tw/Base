@@ -1,0 +1,14 @@
+﻿
+namespace Base.Models
+{
+    /// <summary>
+    /// 多國語基本欄位 for base class
+    /// 固定從 _Locale0 table讀取, 欄位與model必須match
+    /// </summary>
+    public class Locale0Model
+    {
+        //下拉式欄位全選
+        public string SelectAll { get; set; }
+
+    }//class
+}

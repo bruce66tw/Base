@@ -1,0 +1,68 @@
+﻿
+using Base.Enums;
+
+namespace BaseWeb.Models
+{
+    /// <summary>
+    /// input欄位可接受的屬性, 屬性名稱為小寫配合 jquery validate
+    /// </summary>
+    public class InputPropModel
+    {
+
+        /// <summary>
+        /// 欄位種類
+        /// </summary>
+        public string Type = EnumInputType.Text;
+
+        /// <summary>
+        /// required or not
+        /// </summary>
+        public bool required = false;
+
+        /// <summary>
+        /// min length
+        /// </summary>
+        public int minlength = 0;
+
+        /// <summary>
+        /// max length
+        /// </summary>
+        public int maxlength = 0;
+
+        /// <summary>
+        /// min value
+        /// </summary>
+        public int min = 0;
+
+        /// <summary>
+        /// max value
+        /// </summary>
+        public int max = 0;
+
+        /// <summary>
+        /// pattern
+        /// </summary>
+        //public string pattern = "";
+
+        /// <summary>
+        /// placeholder
+        /// </summary>
+        public string PlaceHolder = "";
+
+        /// <summary>
+        /// className
+        /// </summary>
+        public string ClassName = "";
+
+        /// <summary>
+        /// onChange event name
+        /// </summary>
+        //public string OnChange = "";
+
+        /// <summary>
+        /// auto complete(typeahead), if true, 前端必須呼叫 xg.initAuto()
+        /// </summary>
+        public bool Auto = false;
+
+    }
+}

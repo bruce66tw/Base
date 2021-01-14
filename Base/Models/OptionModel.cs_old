@@ -1,0 +1,24 @@
+﻿
+namespace Base.Models
+{
+    /// <summary>
+    /// ??select option model
+    /// </summary>
+    public class OptionModel
+    {
+        /// <summary>
+        /// 如果有設定此欄位, 則 option 會顯示這個值在畫面上 (取代 Value 欄位)
+        /// </summary>
+        public string Title { get; set; }
+
+        /// <summary>
+        /// key for save DB
+        /// </summary>
+        public string Key { get; set; }
+
+        /// <summary>
+        /// text for show
+        /// </summary>
+        public string Value { get; set; }
+    }
+}

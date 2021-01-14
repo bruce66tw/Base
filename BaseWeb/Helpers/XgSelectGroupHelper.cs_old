@@ -1,0 +1,83 @@
+﻿using System;
+using System.Collections.Generic;
+using Base.Models;
+using System.Linq.Expressions;
+using System.Web.Mvc;   //必須using MVC
+using Base.Services;
+using BaseWeb.Services;
+
+namespace BaseWeb.Helpers
+{
+    /// <summary>
+    /// 分群組的單選下拉式欄位, 每個群組有header
+    /// </summary>
+    public static class zz_XgSelectGroupHelper
+    {
+        /// <summary>
+        /// 下拉式欄位, 使用 bootstrap-select
+        /// </summary>
+        /// <param name="htmlHelper"></param>
+        /// <param name="fid">欄位 id</param>
+        /// <param name="value">欄位 value</param>
+        /// <param name="rows">data source, 陣列內容依次為: title, key, value</param>
+        /// <param name="columns">欄位數, 0表示單欄</param>
+        /// <param name="seperator">value分隔字元, null表示單選, 有值表示多選</param>
+        /// <param name="className">自訂 class name</param>
+        /// <param name="onClickFn">callback function for onClick</param>
+        /// <returns></returns>
+        //public static IHtmlContent XgSelectGroup(this IHtmlHelper htmlHelper, string fid, string value, List<GroupKeyValuesModel> rows, string placeHolder = "", string className = "", string onClickFn = "")
+        public static IHtmlContent XgSelectGroup(this IHtmlHelper htmlHelper, string fid, string value, List<GroupIdStrsModel> rows, Select2PropModel prop = null)
+        {
+            return GetStr(fid, value, rows, prop);
+        }
+
+        public static IHtmlContent XgSelectGroupFor<TModel, TProperty>(this IHtmlHelper<TModel> htmlHelper, Expression<Func<TModel, TProperty>> expression, List<GroupIdStrsModel> rows, Select2PropModel prop = null)
+        {
+            //讀取欄位 id
+            var metadata = ModelMetadata.FromLambdaExpression(expression, htmlHelper.ViewData);
+            var fid = metadata.PropertyName;
+            var value = metadata.Model != null ? metadata.Model.ToString() : "";
+            return GetStr(fid, value, rows, prop);
+        }
+
+        private static IHtmlContent GetStr(string fid, string value, List<GroupIdStrsModel> rows, Select2PropModel prop = null)
+        {
+            //initial
+            //prop = _Helper.InitSelectProp(prop);
+
+            //var values = _Str.ToList(value, (char)seperator);
+            var htmlRow = "<option value='{0}' {2}>{1}</option>";
+            var htmlGroup = "<optgroup label='{1}'>{0}</optgroup>";
+            //會顯示紅色錯誤框的element 必須在 error label 上面且相鄰  !!
+            //寬度必須為 data-width='100%' 才會有 RWD效果 !!
+            var html = @"
+<div style='width:100%'>
+    <select id='{0}' name='{0}' {4}>
+        {1}
+    </select>
+    <span id='{2}' class='{3}'></span>
+</div>
+";
+
+            var list = "";
+            for (var i = 0; i < rows.Count; i++)
+            {
+                var group = "";
+                for (var j = 0; j < rows[i].Items.Count; j++)
+                {
+                    var row = rows[i].Items[j];
+                    var selected = (value == row.Id) ? "selected" : "";
+                    group += String.Format(htmlRow, row.Id, row.Str, selected);
+                }
+                list += String.Format(htmlGroup, group, rows[i].Group);
+            }
+
+            //get select property string
+            var prop2 = _Helper.GetSelectProp(prop);
+
+            html = String.Format(html, fid, list, fid + _WebFun.ErrTail, _WebFun.ErrLabCls, prop2);
+            return new HtmlString(html);
+        } 
+
+    }
+}

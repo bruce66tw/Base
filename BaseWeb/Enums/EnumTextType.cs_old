@@ -1,0 +1,14 @@
+﻿
+namespace BaseWeb.Enums
+{
+    /// <summary>
+    /// text input 欄位種類
+    /// </summary>
+    public enum EnumTextType
+    {
+        Normal,
+        Password,
+        Readonly,
+        Label,
+    }    
+}
