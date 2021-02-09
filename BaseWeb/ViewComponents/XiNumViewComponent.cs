@@ -18,30 +18,35 @@ namespace BaseWeb.ViewComponents
         /// <param name="inputCols"></param>
         /// <param name="prop"></param>
         /// <returns></returns>
-        public HtmlString Invoke(string title, 
-            string fid, string value = "", bool required = false, 
-            bool inRow = false, string cols = "", string tip = "", PropNumDto prop = null)
+        public HtmlString Invoke(string title, string fid, string value = "", 
+            bool required = false, bool inRow = false, 
+            bool isDigit = true,
+            string labelTip = "", string inputTip = "",
+            bool editable = true, string width = "100%",
+            string extAttr = "", string extClass = "",
+            decimal? min = null, decimal? max = null,
+            string cols = "")
         {
-            prop = prop ?? new PropNumDto();
+            //prop = prop ?? new PropNumDto();
 
             //attr
-            var type = prop.IsDigit ? "digits" : "number";
-            var attr = _Helper.GetBaseAttr(fid, prop) +
-                $" type='{type}' value='{value}' style='text-align:right; width:{prop.Width}'" +
+            var type = isDigit ? "digits" : "number";
+            var attr = _Helper.GetBaseAttr(fid, editable, extAttr) +
+                $" type='{type}' value='{value}' style='text-align:right; width:{width}'" +
                 _Helper.GetRequired(required) +
-                _Helper.GetPlaceHolder(prop.PlaceHolder);
+                _Helper.GetPlaceHolder(inputTip);
 
-            if (prop.MinValue != null)
-                attr += " min='" + prop.MinValue + "'";
-            if (prop.MaxValue != null)
-                attr += " max='" + prop.MaxValue + "'";
+            if (min != null)
+                attr += " min='" + min + "'";
+            if (max != null)
+                attr += " max='" + max + "'";
 
             //html
-            var html = $"<input{attr} data-type='num' class='form-control xi-border {prop.ExtClass}'>";
+            var html = $"<input{attr} data-type='num' class='form-control xi-border {extClass}'>";
 
             //add title
             if (!string.IsNullOrEmpty(title))
-                html = _Helper.InputAddLayout(html, title, required, tip, inRow, cols);
+                html = _Helper.InputAddLayout(html, title, required, labelTip, inRow, cols);
 
             return new HtmlString(html);
         } 

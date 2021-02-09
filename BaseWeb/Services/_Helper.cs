@@ -31,44 +31,43 @@ namespace BaseWeb.Services
             return required ? "<span class='xg-required'>*</span>" : "";
         }
 
-        //get label icon tip
+        /// <summary>
+        /// get label tip with icon
+        /// </summary>        
         public static string GetIconTip()
         {
-            return "<i class='icon-info'></i>";
+            return "<i class='ico-info'></i>";
         }
 
         #region get attribute
         /// <summary>
-        /// get attr of: data-fid,name,readonly, ext attr
-        /// if data-id, also set name property for form submit
+        /// get attr of: data-fid,name,readonly, ext attributes
         /// </summary>
         /// <param name="fid"></param>
-        /// <param name="prop"></param>
+        /// <param name="editable"></param>
+        /// <param name="extAttr"></param>
         /// <param name="setNameAttr">set name attribute or not</param>
         /// <returns></returns>
-        public static string GetBaseAttr(string fid, PropBaseDto prop = null, bool setNameAttr = true)
+        public static string GetBaseAttr(string fid, bool editable = true, string extAttr = "", bool setNameAttr = true)
         {
-            //set data-id, name
+            //set data-fid, name
             var attr = $" data-fid='{fid}'";
             if (setNameAttr)
                 attr += $" name='{fid}'";
-            if (prop != null)
-            {
-                if (!prop.Editable)
-                    attr += " readonly";
-                if (prop.ExtAttr != "")
-                    attr += " " + prop.ExtAttr;
-            }
+            if (!editable)
+                attr += " readonly";
+            if (extAttr != "")
+                attr += " " + extAttr;
             return attr;
         }
 
         //add placeholder attribute
         //placeholder could have quota, use escape
-        public static string GetPlaceHolder(string placeHolder)
+        public static string GetPlaceHolder(string inputTip)
         {
-            return (placeHolder == "")
+            return (inputTip == "")
                 ? ""
-                : " placeholder='" + placeHolder + "'";
+                : " placeholder='" + inputTip + "'";
         }
 
         //get required attribute
@@ -85,6 +84,7 @@ namespace BaseWeb.Services
                 : "";
         }
 
+        /*
         //return ext class
         public static string GetClass(string extClass)
         {
@@ -99,24 +99,22 @@ namespace BaseWeb.Services
                 ? ""
                 : " " + fnName + "='" + (prop.FnOnChange.IndexOf("(") > 0 ? prop.FnOnChange : prop.FnOnChange + "(" + arg + ")") + "'";
         }
+        */
         #endregion
 
-        /*
-        //return ext class
-        public static string GetExtClass(bool required, string extClass)
+        /// <summary>
+        /// get date view component html string
+        /// </summary>
+        /// <param name="fid"></param>
+        /// <param name="value"></param>
+        /// <param name="required"></param>
+        /// <param name="prop"></param>
+        /// <param name="rb"></param>
+        /// <returns></returns>
+        public static string GetDateStr(string fid, string value, bool required, PropDateDto prop, BaseResDto rb)
         {
-            var data = required ? XdRequired : "";
-            if (extClass != "")
-                data = " " + extClass;
-            return data;
-        }
-        */
-
-        //get date field helper mvc string
-        public static string GetDateStr(string fid, string value, bool required, PropDateDto prop, RBDto rb)
-        {
-            //base attribute
-            var attr = GetBaseAttr(fid, prop) +
+            //TODO: base attribute
+            var attr = GetBaseAttr(fid) +
                 GetPlaceHolder(prop.PlaceHolder) +
                 GetRequired(required);
 
@@ -134,8 +132,8 @@ namespace BaseWeb.Services
     <input{0} value='{1}' type='text' class='form-control xd-date {2}'>
     <div class='input-group-addon'></div>
     <span>
-        <i class='icon-times' onclick='_idate.clean(this)'></i>
-        <i class='icon-calendar' onclick='_idate.toggle(this)'></i>
+        <i class='ico-delete' onclick='_idate.clean(this)'></i>
+        <i class='ico-date' onclick='_idate.toggle(this)'></i>
     </span>
 </div>
 ", attr, value, prop.ExtClass);
@@ -144,21 +142,36 @@ namespace BaseWeb.Services
 
         }
 
-        //get select field mvc string
-        public static string GetSelectHtml(BaseResourceDto baseR, string fid, string value, 
-            bool required, List<IdStrDto> rows, PropSelectDto prop = null)
+        /// <summary>
+        /// get select view component html string
+        /// </summary>
+        /// <param name="br"></param>
+        /// <param name="fid"></param>
+        /// <param name="value"></param>
+        /// <param name="required"></param>
+        /// <param name="rows"></param>
+        /// <param name="prop"></param>
+        /// <returns></returns>
+        /*
+        public static string GetSelectHtml(BaseResDto br, string fid, string value, 
+            bool required, List<IdStrDto> rows,
+            string inputTip,
+            bool editable, 
+            string extAttr, string extClass,
+            string fnOnChange, bool addEmptyRow,
+            PropSelectDto prop = null)
         {
-            prop ??= new PropSelectDto();
+            //prop ??= new PropSelectDto();
 
             //attr
-            var attr = GetBaseAttr(fid, prop) +
-                GetFnOnChange("onchange", prop, "") +
-                GetPlaceHolder(prop.PlaceHolder);
-
+            var attr = GetBaseAttr(fid, editable, extAttr) +
+                GetPlaceHolder(inputTip);
+            if (fnOnChange != "")
+                attr += $" onchange='{fnOnChange}'";
             //ext class
-            var extClass = required ? XdRequired : "";
-            if (prop.ExtClass != "")
-                extClass = " " + prop.ExtClass;
+            //var extClass = required ? XdRequired : "";
+            //if (prop.ExtClass != "")
+            //    extClass = " " + prop.ExtClass;
 
             //option item
             var items = "";
@@ -166,10 +179,10 @@ namespace BaseWeb.Services
 
             //add first empty row & set its title='' to show placeHolder !!
             //if (prop != null && prop.Columns <= 1)
-            if (prop.AddEmptyRow)
+            if (addEmptyRow)
             {
                 //var rb = _Locale.RB;
-                items += string.Format(htmlItem, "", baseR.PlsSelect, "title=''");
+                items += string.Format(htmlItem, "", br.PlsSelect, "title=''");
             }
             //{
             //    var item1 = (prop.PlaceHolder != "") ? prop.PlaceHolder : _Fun.Select;
@@ -191,13 +204,6 @@ namespace BaseWeb.Services
     {items}
 </select>";
         }
-
-        /*
-        //欄位是否在database內
-        public static bool IsInDt(string title)
-        {
-            return (title == "0");
-        }
         */
 
         /// <summary>
@@ -206,23 +212,23 @@ namespace BaseWeb.Services
         /// <param name="html"></param>
         /// <param name="title"></param>
         /// <param name="required"></param>
-        /// <param name="tip"></param>
+        /// <param name="labelTip"></param>
         /// <param name="cols">ary0(是否含 row div), ary1,2(for 水平), ary1(for 垂直)</param>
         /// <returns></returns>
         public static string InputAddLayout(string html, string title, bool required, 
-            string tip, bool inRow, string cols)
+            string labelTip, bool inRow, string cols)
         {
             //cols = cols ?? _Fun.DefHCols;
             var colList = GetCols(cols);
-            var labelTip = "";
+            var labelTip2 = "";
             var iconTip = "";
-            if (!string.IsNullOrEmpty(tip))
+            if (!string.IsNullOrEmpty(labelTip))
             {
-                labelTip = " title='" + tip + "'";
+                labelTip2 = " title='" + labelTip + "'";
                 iconTip = GetIconTip();
             }
             var reqSpan = GetRequiredSpan(required);
-            var result = "";
+            string result;
             if (colList.Count > 1)
             {
                 //horizontal
@@ -231,7 +237,7 @@ namespace BaseWeb.Services
 <div class='col-md-{1} xg-input'>
     {4}
 </div>
-", colList[0], colList[1], labelTip, (reqSpan + title + iconTip), html);
+", colList[0], colList[1], labelTip2, (reqSpan + title + iconTip), html);
             }
             else
             {
@@ -243,7 +249,7 @@ namespace BaseWeb.Services
         {3}
     </div>
 </div>
-", colList[0], labelTip, (reqSpan + title + iconTip), html);
+", colList[0], labelTip2, (reqSpan + title + iconTip), html);
             }
 
             //if not in row, add row container

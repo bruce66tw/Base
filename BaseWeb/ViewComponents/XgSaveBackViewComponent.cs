@@ -6,16 +6,15 @@ namespace BaseWeb.ViewComponents
 {
     public class XgSaveBackViewComponent : ViewComponent
     {
-        public HtmlString Invoke(string fnSave = "_crud.onSave()", string fnBack = "_crud.onToRead()" )
+        public HtmlString Invoke(string align = "center", string fnOnSave = "_crud.onSave()", string fnOnBack = "_crud.onToRead()" )
         {
-            var baseR = _Fun.GetBaseR();
-            var html = string.Format(@"
-<div class='xg-center' style='margin-top:25px;'>
-    <button id='btnSave' type='button' class='btn xg-btn-size btn-success' onclick='{0}'>{1}<i class='icon-save'></i></button>
-    <button id='btnToRead' type='button' class='btn xg-btn-size btn-primary' onclick='{2}'>{3}<i class='icon-to-list'></i></button>
+            var baseR = _Fun.GetBaseRes();
+            var html = $@"
+<div class='xg-{align}'>
+    <button id='btnSave' type='button' class='btn xg-btn-size btn-success' onclick='{fnOnSave}'>{baseR.BtnSave}<i class='ico-save'></i></button>
+    <button id='btnToRead' type='button' class='btn xg-btn-size btn-primary' onclick='{fnOnBack}'>{baseR.BtnToRead}<i class='ico-back'></i></button>
 </div>
-", fnSave, baseR.BtnSave, fnBack, baseR.BtnToRead);
-
+";
             return new HtmlString(html);
         }
 

@@ -1,4 +1,5 @@
-﻿using Base.Models;
+﻿using Base.Enums;
+using Base.Models;
 using System.Collections.Generic;
 
 namespace Base.Services
@@ -121,9 +122,46 @@ namespace Base.Services
         /// <param name="fid"></param>
         /// <param name="list"></param>
         /// <returns></returns>
-        public static string GetCondByListString(string fid, List<string> list)
+        public static string GetCondByListStr(string fid, List<string> list)
         {
             return fid + " in (" + _List.ToStr(list, true) + ")";
+        }
+
+        /// <summary>
+        /// 如果 sql 中有用到字串相加的功能(concat), 可以呼叫這個函數來轉換, 以適用其他資料庫種類.
+        /// </summary>
+        /// <param name="values">第後一個欄位為 alias 名稱, 可為空白</param>
+        /// <returns>string</returns>
+        //public static string sqlConcat(string ps_sql, params string[] pas_input)
+        public static string GetConcat(params string[] values)
+        {
+            int len = values.Length;
+            if (len <= 1)
+                return "";
+
+            string op;
+            string sql = "";
+            switch (_Fun.GetDbType())
+            {
+                case DbTypeEnum.MSSql:
+                    op = " + ";
+                    break;
+                case DbTypeEnum.MySql:
+                    op = ", ";
+                    sql = "concat";
+                    break;
+                case DbTypeEnum.Oracle:
+                    op = " || ";
+                    break;
+                default:
+                    return "";
+            }
+
+            string list = "";
+            for (int i = 0; i < len; i++)
+                list += values[i] + op;
+
+            return sql + "(" + list + ")";
         }
 
     }//class

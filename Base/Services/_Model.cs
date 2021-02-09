@@ -34,11 +34,16 @@ namespace Base.Services
             if (model == null)
                 return "";
 
+            return JsonConvert.SerializeObject(model);
+            /*
             var result = new JObject();
-            foreach (var prop in model.GetType().GetProperties())
+            //foreach (var prop in model.GetType().GetProperties())
+            var props = Activator.CreateInstance<T>().GetType().GetProperties();
+            foreach (var prop in props)
                 result[prop.Name] = prop.GetValue(model, null).ToString();
 
             return _Json.ToStr(result);
+            */
         }
 
         public static JObject ToJson<T>(T model)

@@ -8,7 +8,7 @@ namespace BaseWeb.Services
         public string GetLocale()
         {
             var cookie = _Web.GetRequest().Cookies.GetValueByName(_Web.LocaleFid);
-            return (cookie == null) ? _Fun.GetBaseU().Locale : cookie.ToString();
+            return (cookie == null) ? _Fun.GetBaseUser().Locale : cookie.ToString();
         }
 
         //get cookie for session key

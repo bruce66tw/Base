@@ -21,7 +21,7 @@ namespace BaseWeb.ViewComponents
             title = _Helper.GetRequiredSpan(required) + title;
             var html = (tip == "")
                 ? "<th>" + title + "</th>"
-                : "<th title='" + tip + "'>" + title + "<i class='icon-info'></i></th>";
+                : "<th title='" + tip + "'>" + title + "<i class='ico-info'></i></th>";
             return new HtmlString(html);
         }
 

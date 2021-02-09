@@ -10,7 +10,6 @@ namespace BaseWeb.Services
         public const string FileJson = "_fileJson";
 
         //input field error validation, need match client side _fun.js
-        //public const string XiBorder = "xi-border";   //input border class for show red border, =_fun.xiBorder
 
         public const string ErrTail = "_err";           //?? error label id
         public const string ErrCls = "xg-error";            //error flag

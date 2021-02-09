@@ -44,10 +44,10 @@ namespace BaseWeb.ViewComponents
 <label{extAttr} class='form-control xi-border{extClass}' style='margin-bottom:0'>
     <input type='file' onchange='_ifile.onChangeFile(this)' data-max='{maxSize}' data-exts='{exts}' style='display:none'>
     <button type='button' class='btn btn-link' onclick='{fnOnOpenFile}'>
-        <i class='icon-open' title=''></i>
+        <i class='ico-open' title=''></i>
     </button>
     <button type='button' class='btn btn-link' onclick='{fnOnDeleteFile}'>
-        <i class='icon-times'></i>
+        <i class='ico-delete'></i>
     </button>
     <a href='#' onclick='event.preventDefault(); {fnOnViewFile}'>{value}</a>
 </label>

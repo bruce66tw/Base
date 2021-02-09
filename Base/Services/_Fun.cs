@@ -10,7 +10,11 @@ namespace Base.Services
     {
         #region constant
         //hidden input for CRSF
-        public const string HideKey = "_hideKey";
+        //public const string HideKey = "_hideKey";
+
+        //system session name
+        public const string BaseUser = "_BaseUser";         //base user info
+        public const string ProgAuthStrs = "_ProgAuthStrs"; //program autu string list
 
         //date format for save into db
         public const string BackDateFormat = "yyyy/M/d";
@@ -20,10 +24,24 @@ namespace Base.Services
         public const string HtmlCarrier = "<br>";     //for html
 
         //null string for checking ??
-        public const string NullString = "_null";
+        //public const string NullString = "_null";
 
         //default view cols for layout(row div, label=2, input=3)(水平) 
         public static List<int> DefHCols = new List<int>() { 2, 3 };
+        #endregion
+
+        #region input parameters
+        //private static ServiceContainer _DI;
+        private static IServiceProvider _di;
+
+        //database type
+        private static DbTypeEnum _dbType;
+
+        //program auth type
+        private static AuthTypeEnum _authType;
+
+        //dynamic locale or not
+        private static bool _dynamicLocale;
         #endregion
 
         #region base varibles
@@ -35,13 +53,6 @@ namespace Base.Services
         #endregion
 
         #region Db variables
-        //database type
-        private static DbTypeEnum _dbType;
-
-        //lightInject DI
-        //private static ServiceContainer _DI;
-        private static IServiceProvider _DI;
-        
         //for read page rows
         public static string ReadPageSql;
 
@@ -72,11 +83,14 @@ namespace Base.Services
         /// <summary>
         /// initial db environment for Ap with db function !!
         /// </summary>
-        public static void Init(IServiceProvider di, DbTypeEnum dbType)
+        public static void Init(IServiceProvider di, DbTypeEnum dbType = DbTypeEnum.MSSql, 
+            AuthTypeEnum authType = AuthTypeEnum.None, bool dynamicLocale = false)
         {
             //set instance variables
+            _di = di;
             _dbType = dbType;
-            _DI = di;
+            _authType = authType;
+            _dynamicLocale = dynamicLocale;
 
             #region set smtp
             var smtp = Config.Smtp;
@@ -142,7 +156,7 @@ Offset {2} Rows Fetch Next {3} Rows Only
         //get DI
         public static IServiceProvider GetDI()
         {
-            return _DI;
+            return _di;
         }
 
         //get db type
@@ -151,55 +165,52 @@ Offset {2} Rows Fetch Next {3} Rows Only
             return _dbType;
         }
 
+        //get auth type
+        public static AuthTypeEnum GetAuthType()
+        {
+            return _authType;
+        }
+
+        //get _dynamicLocale
+        public static bool IsDynamicLocale()
+        {
+            return _dynamicLocale;
+        }
+
         //get system error string
         public static ResultDto GetSystemError()
         {
             return new ResultDto() { ErrorMsg = "System Error, Please check admin !" };
         }
 
-        //get base resource for base component
-        public static BaseResourceDto GetBaseR()
+        /// <summary>
+        /// get base resource for base component
+        /// </summary>
+        /// <returns>BaseResourceDto</returns>
+        public static BaseResDto GetBaseRes()
         {
-            var service = (IBaseResourceService)_DI.GetService(typeof(IBaseResourceService));
+            var service = (IBaseResService)_di.GetService(typeof(IBaseResService));
             return service.GetData();
-        }
-
-        //get base user info for base component
-        public static BaseUserInfoDto GetBaseU()
-        {
-            var service = (IBaseUserInfoService)_DI.GetService(typeof(IBaseUserInfoService));
-            return service.GetData();
-        }
-
-        public static string GetLocale()
-        {
-            return GetBaseU().Locale;
         }
 
         /// <summary>
-        /// check program access right
+        /// get base user info for base component
         /// </summary>
-        /// <param name="progList">program list</param>
-        /// <param name="prog">program id</param>
-        /// <param name="funType">function type, see CrudEstr, empty for controller, value for action</param>
-        /// <returns>bool</returns>
-        public static bool CheckProgAuth(string progList, string prog, string funType)
+        /// <returns>BaseUserInfoDto</returns>
+        public static BaseUserDto GetBaseUser()
         {
-            progList = "," + progList + ",";
-            if (string.IsNullOrEmpty(funType))
-            {
-                //prog add tail of ','
-                return progList.IndexOf("," + prog + ",") >= 0;
-            }
-            else
-            {
-                //prog add tail of ':'
-                var funList = _Str.GetMid(progList, "," + prog + ":", ",");
-                return string.IsNullOrEmpty(funList)
-                    ? false
-                    : funList.IndexOf(funType) >= 0;
-
-            }
+            var service = (IBaseUserService)_di.GetService(typeof(IBaseUserService));
+            return service.GetData();
         }
+
+        /// <summary>
+        /// get locale code
+        /// </summary>
+        /// <returns></returns>
+        public static string GetLocale()
+        {
+            return GetBaseUser().Locale;
+        }
+
     } //class
 }

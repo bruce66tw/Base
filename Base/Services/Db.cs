@@ -1,6 +1,5 @@
 ﻿using Base.Enums;
 using Base.Models;
-//using LightInject;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -14,20 +13,15 @@ namespace Base.Services
     /// </summary>
     public class Db : IDisposable
     {
-        //instance variables
-        //private T _sqlDb = default(T);
-
         //OleDb <-> Sql, ex:OleDbConnection <-> SqlConnection
         //SqlConnection, SqlCommand, SqlTransaction
         private DbConnection _conn = null;   //or will compile error !!
         private DbCommand _cmd = null;
         private DbTransaction _tran;
-        private IServiceProvider _DI;       //DI
+        private IServiceProvider _di;       //DI
 
         //column mapping for update/insert, key-type-欄位序號
         private List<IdNumDto> _colMap = new List<IdNumDto>();
-
-        //private RBDto _rb = null;
 
         //status
         private bool _status;    //db status
@@ -54,7 +48,7 @@ namespace Base.Services
             //_dbStr: db field name at config, if length > 30, it will be connection string !!
             _dbStr = (dbStr == "") ? _Fun.Config.Db : dbStr;
             //_DI = (di == null) ? _Fun.GetDI() : (ServiceContainer)di;
-            _DI = _Fun.GetDI();
+            _di = _Fun.GetDI();
 
             //_userDataService = new UserDataService();
             //_userInfo = _Session.Read();
@@ -68,14 +62,6 @@ namespace Base.Services
         {
             return _conn;
         }
-
-        /*
-        public RBDto GetRB()
-        {
-            _rb = _rb ?? _Locale.RB;
-            return _rb;
-        }
-        */
 
         public string GetUserId()
         {
@@ -100,7 +86,7 @@ namespace Base.Services
             //_sqlDb = new T();
             //_conn = new IDbConnection(connStr);
             //_conn = _DI.GetService<string, DbConnection>(connStr);
-            _conn = (DbConnection)_DI.GetService(typeof(DbConnection));
+            _conn = (DbConnection)_di.GetService(typeof(DbConnection));
             //set connect string will get error when connecting state
             if (_conn.ConnectionString == null || _conn.ConnectionString != _dbStr)
                 _conn.ConnectionString = _dbStr;
@@ -143,14 +129,17 @@ namespace Base.Services
         public bool Status()
         {
             return _status;
-        }        
+        }
 
-        //initial command and add parameters, array: field name, value...
-        //OleDb does not support named parameters !!
-        //sqlClient ExecuteReader will call sp_executesql & reused execute plan, increase performance
-        //private void initCmd(params Object[] sqlArgs)
-        //private bool InitCmd(string sql = "", List<string> argFids = null, List<object> argValues = null)         
-        //private bool InitCmd(SqlArgModel sqlArg, int dbSec = _dbSec)
+        /// <summary>
+        /// initial command and add parameters, array: field name, value...
+        /// OleDb does not support named parameters !!
+        /// sqlClient ExecuteReader will call sp_executesql & reused execute plan, increase performance
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <param name="sqlArgs"></param>
+        /// <param name="dbSec"></param>
+        /// <returns></returns>
         private bool InitCmd(string sql, List<object> sqlArgs = null, int dbSec = _dbSec)
         {
             if (!InitDb())
@@ -163,7 +152,7 @@ namespace Base.Services
             if (_cmd == null)
             {
                 //_cmd = new SqlCommand();
-                _cmd = (DbCommand)_DI.GetService(typeof(DbCommand));
+                _cmd = (DbCommand)_di.GetService(typeof(DbCommand));
                 _cmd.Connection = _conn;
             }
             _cmd.CommandType = CommandType.Text;
@@ -229,13 +218,16 @@ namespace Base.Services
             return sqlArgs;
         }
 
-        //return command , PG can handle
+        /// <summary>
+        /// return command , PG can handle
+        /// </summary>
+        /// <returns></returns>
         public DbCommand GetCmd()
         {
             if (_cmd == null)
             {
                 //_cmd = new IDbCommand();
-                _cmd = (DbCommand)_DI.GetService(typeof(DbCommand));
+                _cmd = (DbCommand)_di.GetService(typeof(DbCommand));
                 _cmd.Connection = _conn;
                 _cmd.CommandTimeout = _dbSec;
             }
@@ -261,27 +253,12 @@ namespace Base.Services
         
 
         #region GetJson(s)
-        /*
-        public JObject GetJson(string sql)
-        {
-            var rows = GetJsons(sql);
-            return (rows == null || rows.Count == 0) ? null : (JObject)rows[0];
-        }
-        */
-            public JObject GetJson(string sql, List<object> sqlArgs = null)
+        public JObject GetJson(string sql, List<object> sqlArgs = null)
         {
             var rows = GetJsons(sql, sqlArgs);
             return (rows == null || rows.Count == 0) ? null : (JObject)rows[0];
         }
 
-        /*
-        public JArray GetJsons(string sql)
-        {
-            return GetJsons(new SqlArgModel() { Sql = sql });
-        }
-        */
-        //public JArray GetRows(string sql, List<string> argFids = null, List<object> argValues = null, bool colName = false)        
-        //public JArray GetJsons(SqlArgModel sqlArg)
         public JArray GetJsons(string sql, List<object> sqlArgs = null)
         {
             var reader = GetReader(sql, sqlArgs);
@@ -306,25 +283,12 @@ namespace Base.Services
         #endregion
 
         #region GetInt(s)/GetStr(s)
-        /*
-        public int? GetInt(string sql)
-        {
-            return GetInt(new SqlArgModel() { Sql = sql });
-        }
-        */
         public int? GetInt(string sql, List<object> sqlArgs = null)
         {
             var list = GetInts(sql, sqlArgs);
             return (list == null) ? (int?)null : list[0];
         }
 
-        //type: 0(傳入model), 1(string), 2(int)
-        /*
-        public List<int> GetInts(string sql)
-        {
-            return GetInts(new SqlArgModel() { Sql = sql });
-        }
-        */
         public List<int> GetInts(string sql, List<object> sqlArgs = null)
         {
             var reader = GetReaderForModel(sql, sqlArgs);
@@ -340,13 +304,6 @@ namespace Base.Services
             return (list.Count == 0) ? null : list;
         }
 
-        /*
-        public string GetStr(string sql)
-        {
-            return GetStr(new SqlArgModel() { Sql = sql });
-        }
-        */
-
         /// <summary>
         /// get Db string column value, return null if not found !!
         /// string is nullable type !!
@@ -359,12 +316,7 @@ namespace Base.Services
             var list = GetStrs(sql, sqlArgs);
             return (list == null) ? null : list[0];
         }
-        /*
-        public List<string> GetStrs(string sql)
-        {
-            return GetStrs(new SqlArgModel() { Sql = sql });
-        }
-        */
+
         public List<string> GetStrs(string sql, List<object> sqlArgs = null)
         {
             var reader = GetReaderForModel(sql, sqlArgs);
@@ -459,34 +411,30 @@ namespace Base.Services
             }
         }
 
+        /*
+        private string GetFrontDtFormat()
+        {
+            var baseU = _Fun.GetBaseUser();
+            return (baseU == null)
+                ? _Fun.Config.FrontDtFormat
+                : baseU.FrontDtFormat;
+        }
+        */
+
         //called outside
         public JObject ReaderGetJson(IDataReader reader)
         {
-            //var rb = GetRB();
-            var frontDtFormat = _Fun.GetBaseU().FrontDtFormat;
+            var dtFormat = _Fun.Config.FrontDtFormat;
             var row = new JObject();
             for (var i = 0; i < _colMap.Count; i++)
             {
                 var fid = _colMap[i].Id;
                 var type = _colMap[i].Num;
                 row[fid] = reader.IsDBNull(i) ? "" :
-                    (type == DataTypeEnum.Datetime) ? reader.GetDateTime(i).ToString(frontDtFormat) :
-                    (type == DataTypeEnum.Date) ? reader.GetDateTime(i).ToString(frontDtFormat) :
+                    (type == DataTypeEnum.Datetime) ? reader.GetDateTime(i).ToString(dtFormat) :
+                    (type == DataTypeEnum.Date) ? reader.GetDateTime(i).ToString(dtFormat) :
                     (type == DataTypeEnum.Bit) ? (reader.GetBoolean(i) ? "1" : "0") :
                     reader[i].ToString();
-                /*
-                if (reader.IsDBNull(i))
-                    row[fid] = "";
-                else if (type == EnumDataType.Datetime)
-                    row[fid] = reader.GetDateTime(i).ToString(rb.FrontDtFormat); //24 hour
-                    //row[fid] = reader.GetDateTime(i).AddHours(_userInfo.DiffHour).ToString(RB.FrontDt); //考慮時差 !!
-                else if (type == EnumDataType.Date)
-                    row[fid] = reader.GetDateTime(i).ToString(rb.FrontDateFormat);
-                else if (type == EnumDataType.Bit)
-                    row[fid] = reader.GetBoolean(i) ? 1 : 0;
-                else
-                    row[fid] = reader[i].ToString();
-                */
             }
             return row;
         }
@@ -712,31 +660,7 @@ namespace Base.Services
         }
         #endregion
 
-
         #region remark code
-        /*
-        public bool IsCacheReady()
-        {
-            return _isCacheReady;
-        }
-        */
-
-        /*
-        /// <summary>
-        /// return ConnectionString
-        /// </summary>
-        /// <returns></returns>
-        public string GetConnectStr()
-        {            
-            return _Config.GetDbStr(_dbStr);
-        }
-
-        public DateTime GetNow()
-        {
-            return _now;
-        }
-        */
-
         /// <summary>
         /// insert identify, 考慮mssql, mysql, oracle, 所以從 updateDb() 獨立出來
         /// </summary>
@@ -773,17 +697,6 @@ namespace Base.Services
             }
         }
         */
-
-        /*
-        private bool InitCache()
-        {
-            if (_cache == null)
-                _cache = new Cache();
-            return _cache.IsReady();
-        }
-        */
-
-
         #endregion
 
     } //class

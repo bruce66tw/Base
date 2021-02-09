@@ -10,7 +10,7 @@
         {
             SystemName = "管理系統";
             DefaultLocale = "zh-TW";
-            DefaultFrontDtFormat = "yyyy/M/d HH:mm:ss";
+            FrontDtFormat = "yyyy/M/d HH:mm:ss";
             ServerId = "A";
             SlowSql = 1000;
             LogInfo = false;
@@ -32,8 +32,8 @@
         //default locale code
         public string DefaultLocale { get; set; }
 
-        //default front datetime format
-        public string DefaultFrontDtFormat { get; set; }
+        //front datetime format for db read datetime column
+        public string FrontDtFormat { get; set; }
         
         //server Id for new key
         public string ServerId { get; set; }
@@ -47,10 +47,10 @@
         //log sql
         public bool LogSql { get; set; }
 
-        //root email for send error
+        //root email address for send error
         public string RootMail { get; set; }
 
-        //tester email
+        //tester email address
         public string TesterMail { get; set; }
 
         //upload file max size(MB)

@@ -3,7 +3,7 @@
     /// <summary>
     /// basic user profile data for base class
     /// </summary>
-    public class BaseUserInfoDto
+    public class BaseUserDto
     {
         //login or not
         public bool IsLogin;
@@ -18,13 +18,13 @@
 
         //locale code
         public string Locale;
-        public string FrontDtFormat;
+        //public string FrontDtFormat;
 
         //diffence hours to GMT for Db saving
-        public double HourDiff = 0;
+        //public double HourDiff = 0;
 
         //program list, ex:User:CRUDPEV,Dept:CRUD...
-        public string ProgList;
+        public string ProgAuthStrs;
 
     }//class
 }

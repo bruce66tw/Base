@@ -8,8 +8,8 @@ namespace Base.Models
     //匯入失敗的excel檔名為 Id + "_Fail.xlsx"
     public class ExcelImportDto<T> where T : class, new()
     {
-        public CheckImportRow<T> FnCheckImportRow = null;
-        public SaveImportRows<T> FnSaveImportRows;
+        public FnCheckImportRow<T> FnCheckImportRow = null;
+        public FnSaveImportRows<T> FnSaveImportRows;
 
         //public string SaveFilePath;
         //public string ErrorFilePath;

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace Base.Services
 {
-    //excel set report
-    public class ExcelSetService
+    //for fill excel file
+    public class ExcelFillService
     {
         //open excel template file
         //OpenFile()

@@ -20,27 +20,25 @@ namespace BaseWeb.ViewComponents
         /// <returns></returns>
         public HtmlString Invoke(string title, string fid, string value = "", 
             int maxLen = 0, bool required = false,
-            bool inRow = false, string cols = "", PropTextAreaDto prop = null)
+            string labelTip = "", string inputTip = "",
+            bool editable = true, string width = "100%",
+            string extAttr = "", string extClass = "",
+            int rowsCount = 3,
+            bool inRow = false, string cols = "")
         {
-            if (prop == null)
-                prop = new PropTextAreaDto();
+            //if (prop == null)
+            //    prop = new PropTextAreaDto();
 
             //attr
             //var isInDt = _Helper.IsInDt(title);
-            var attr = _Helper.GetBaseAttr(fid, prop) +
-                " value='" + value + "'" +
-                " style='width:" + prop.Width + "'" + 
-                " rows='" + prop.RowsNum + "'";
-            if (required)
-                attr += " required";
-            if (maxLen > 0)
-                attr += " maxlength='" + maxLen + "'";
-            //placeholder could have quota, use escape
-            if (prop.PlaceHolder != "")
-                attr += " placeholder='" + prop.PlaceHolder + "'";
+            var attr = _Helper.GetBaseAttr(fid, editable, extAttr) +
+                $" value='{value}' rows='{rowsCount}' style='width:{width}'" +
+                _Helper.GetPlaceHolder(inputTip) +
+                _Helper.GetRequired(required) +
+                _Helper.GetMaxLength(maxLen);
 
             //html
-            var html = $"<textarea{attr} data-type='textarea' class='form-control xi-border {prop.ExtClass}'></textarea>";
+            var html = $"<textarea{attr} data-type='textarea' class='form-control xi-border {extClass}'></textarea>";
             /*
             var html = string.Format(@"
 <div style='width:{5}; text-align:left; margin-bottom:6px;' class='{6}'>
@@ -50,7 +48,7 @@ namespace BaseWeb.ViewComponents
             */
 
             if (!string.IsNullOrEmpty(title))
-                html = _Helper.InputAddLayout(html, title, required, "", inRow, cols);
+                html = _Helper.InputAddLayout(html, title, required, labelTip, inRow, cols);
 
             //html = String.Format(html, attr, _Html.Decode(value), extClass, fid + _WebFun.Error, _WebFun.ErrorLabelClass);
             return new HtmlString(html);            

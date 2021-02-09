@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace Base.Services
         //to json string, return "{}" if input null for jquery parsing !!
         public static string ToStr(JObject json)
         {
-            return (json == null) ? "{}" : json.ToString(Newtonsoft.Json.Formatting.None);
+            return (json == null) ? "{}" : json.ToString(Formatting.None);
         }
 
         public static JArray StrToArray(string str)
@@ -27,26 +28,18 @@ namespace Base.Services
 
         public static JObject SystemError(string error)
         {
-            var json = new JObject
+            return new JObject
             {
                 ["SystemError"] = error
             };
-            return json;
-            /*
-            return JObject.FromObject(new
-            {
-                SystemError = error
-            });
-            */
         }
 
         public static JObject GetError(string error)
         {
-            var json = new JObject
+            return new JObject
             {
                 ["ErrorMsg"] = error
             };
-            return json;
         }
 
         /*
@@ -66,7 +59,7 @@ namespace Base.Services
         {
             return (rows == null || rows.Count == 0) 
                 ? null 
-                : rows.ToString(Newtonsoft.Json.Formatting.Indented);
+                : rows.ToString(Formatting.Indented);
         }
 
         //sort json array

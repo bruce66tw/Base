@@ -6,18 +6,18 @@ namespace BaseFlow.Services
 {
     public class FlowRead
     {
-        private ReadModel _crud = new ReadModel()
+        private ReadDto dto = new ReadDto()
         {
-            Sql = @"
-Select *
-From dbo.Db
-Order by Id
+            ReadSql = @"
+select *
+from dbo.Flow
+order by Id
 ",
         };
 
-        public JObject GetPage(DtModel dtIn)
+        public JObject GetPage(DtDto dt)
         {
-            return new CrudRead().GetPage(_crud, dtIn);
+            return new CrudRead().GetPage(dto, dt);
         }
 
     } //class

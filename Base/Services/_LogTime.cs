@@ -32,7 +32,7 @@ namespace Base
         }
 
         //return log string
-        public static string GetLog()
+        public static string GetLogMsg()
         {
             return _result;
         }

@@ -29,14 +29,14 @@ namespace Base.Services
         private List<object> _sqlArgs = new List<object>();
 
         //front datetime format
-        private string _frontDtFormat;
+        //private string _frontDtFormat;
 
         //constructor
         public CrudRead(string dbStr = "")
         {
             //_baseInfo = baseInfoService.GetInfo();
             _dbStr = dbStr;
-            _frontDtFormat = _Fun.GetBaseU().FrontDtFormat;
+            //_frontDtFormat = _Fun.GetBaseUser().FrontDtFormat;
             //_dbBox = dbBox;
         }
 

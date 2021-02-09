@@ -11,17 +11,17 @@ namespace BaseWeb.Services
     //_Date.cs will refer this class
     public static class _Locale
     {
-        //目前已經載入的基本元件的多國語系內容, <locale, 多國語>
-        private static Dictionary<string, RBDto> _RBs = new Dictionary<string, RBDto>();
-
         //current RB for base component
-        public static RBDto RB = null;
-
-        //在BaseWeb實作
-        private static ILocale _localeService = null;
+        public static BaseResDto BR = null;
 
         //backEnd date format for c#
         public static string BackDateFormat = "yyyy/M/d";
+
+        //目前已經載入的基本元件的多國語系內容, <locale, 多國語>
+        private static Dictionary<string, BaseResDto> _brList = new Dictionary<string, BaseResDto>();
+
+        //在BaseWeb實作
+        private static ILocale _localeService = null;
 
         //constructor
         static _Locale()
@@ -61,7 +61,7 @@ namespace BaseWeb.Services
         public static string GetLocale()
         {
             //return Thread.CurrentThread.CurrentCulture.Name;
-            return (_localeService == null) ? _Fun.GetBaseU().Locale : _localeService.GetLocale();
+            return (_localeService == null) ? _Fun.GetBaseUser().Locale : _localeService.GetLocale();
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-﻿namespace BaseFlow.Enums
+﻿namespace Base.Enums
 {
     public static class NodeTypeEstr
     {

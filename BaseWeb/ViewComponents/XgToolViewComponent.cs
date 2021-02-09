@@ -14,7 +14,7 @@ namespace BaseWeb.ViewComponents
         public HtmlString Invoke()
         {
             //modal html
-            var baseR = _Fun.GetBaseR();
+            var baseR = _Fun.GetBaseRes();
             var html = $@"
 <!-- wait -->
 <div id='xgWait'>

@@ -1,4 +1,5 @@
 ﻿using Base.Services;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -6,7 +7,6 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Text;
-using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
 namespace BaseWeb.Services
@@ -114,13 +114,7 @@ namespace BaseWeb.Services
         public static string GetWebUrl()
         {
             var req = _Web.GetRequest();
-            return string.Format("{0}://{1}{2}{3}", req.Scheme, req.Host, req.Path, req.QueryString);
-            /*
-            return req.Host.
-            return req..Url.Scheme + "://" +
-                req.Url.Authority + 
-                req.ApplicationPath + "/";
-            */
+            return $"{req.Scheme}://{req.Host}{req.Path}{req.QueryString}";
         }
 
         //?? -> Sync()

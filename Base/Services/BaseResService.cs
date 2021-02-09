@@ -4,14 +4,14 @@ using System.IO;
 namespace Base.Services
 {
     //singleton called type
-    public class BaseResourceService : IBaseResourceService
+    public class BaseResService : IBaseResService
     {
-        private BaseResourceDto _baseR;
+        private BaseResDto _br;
 
         //constructor, single locale only
-        public BaseResourceService()
+        public BaseResService()
         {
-            _baseR = new BaseResourceDto(); //initial value
+            _br = new BaseResDto(); //initial value
             var file = _Fun.DirRoot + "wwwroot/locale/" + _Fun.Config.DefaultLocale + "/BR.json";
             if (!File.Exists(file))
             {
@@ -21,13 +21,13 @@ namespace Base.Services
 
             //set _baseR
             var json = _Json.StrToJson(_File.ToStr(file));
-            _Json.CopyToModel(json, _baseR);
+            _Json.CopyToModel(json, _br);
         }
 
         //get base info
-        public BaseResourceDto GetData()
+        public BaseResDto GetData()
         {
-            return _baseR;
+            return _br;
         }
     }
 }

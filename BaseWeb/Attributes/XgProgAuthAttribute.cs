@@ -1,6 +1,8 @@
-﻿using Base.Models;
+﻿using Base.Enums;
+using Base.Models;
 using Base.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Routing;
 
@@ -9,12 +11,11 @@ namespace BaseWeb.Attributes
     public class XgProgAuthAttribute : ActionFilterAttribute
     {
         /// <summary>
-        /// function type, see CrudEst
+        /// crud function type
         /// </summary>
-        //public string FunType = "";
-        private string _funType;
+        private CrudFunEnum _funType;
 
-        public XgProgAuthAttribute(string funType = "")
+        public XgProgAuthAttribute(CrudFunEnum funType = CrudFunEnum.Empty)
         {
             _funType = funType;
         }
@@ -23,55 +24,38 @@ namespace BaseWeb.Attributes
         {
             //get controller name
             var ctrl = (string)context.RouteData.Values["Controller"];
-            //var ctrl = context.Controller...ActionDescriptor.ControllerDescriptor.ControllerName;
-            //if (Prog == "")
-            //    Prog = ctrl;
-
-            //讀取 session
-            //var sess = _Xp.GetSession();
+            //var ctrl = context.Controller.ActionDescriptor.ControllerDescriptor.ControllerName;
 
             //=== check program right ===
-            var userInfo = _Fun.GetBaseU();
+            var userInfo = _Fun.GetBaseUser();
             var isLogin = userInfo.IsLogin;
-            if (isLogin && _Fun.CheckProgAuth(userInfo.ProgList, ctrl, _funType))
+            if (isLogin && _Prog.CheckAuth(userInfo.ProgAuthStrs, ctrl, _funType))
             {
                 //case of ok
                 base.OnActionExecuting(context);
                 return;
             }
 
-            /*
-            if (!userInfo.IsLogin)
-            {
-                //檢查子功能權限是否只能admin才能執行
-                if (Prog == "Home" || Prog == ctrl || _Session.IsAdmin || !_Link.IsSubProgOnlyAdmin(Prog, ctrl))
-                {
-                    //case of ok
-                    base.OnActionExecuting(context);
-                    return;
-                }
-            }
-            */
-
             //=== not login or no access right below ===
-            //log
             //_Log.Error("No Permission: " + Prog + "->" + filterContext.ActionDescriptor.ActionName);
 
-            //判斷 action 種類來決定回傳結果
+            //error msg when need
             //var msg = "您尚未有後台相關權限，請洽人事處進行權限申請。";
-            var msg = !isLogin
-                ? _Fun.GetBaseR().NotLogin
-                : _Fun.GetBaseR().NoProgAuth;
-            //var type = ((ReflectedActionDescriptor)context.ActionDescriptor).MethodInfo.ReturnType;
-            //var returnType = context.ActionDescriptor....a.MethodInfo.ReturnType;
-            var returnType = "ActionResult";    //TODO: get from routeData ??
-            //if (returnType == typeof(ActionResult))
+            var error = isLogin
+                ? _Fun.GetBaseRes().NoProgAuth
+                : _Fun.GetBaseRes().NotLogin;
+
+            //get return type
+            var returnType = "ActionResult";    //default
+            if (context.ActionDescriptor is ControllerActionDescriptor controllerActionDescriptor)
+                returnType = controllerActionDescriptor.MethodInfo.ReturnType.Name;
+
             //1.return view
             if (returnType == "ActionResult")
             {
                 if (!isLogin)
                 {
-                    //redirect to login action
+                    //redirect to Home/Login action
                     context.Result = new RedirectToRouteResult(
                         new RouteValueDictionary
                         {
@@ -93,7 +77,7 @@ namespace BaseWeb.Attributes
             {
                 context.Result = new JsonResult(new
                 {
-                    Value = new ResultDto() { ErrorMsg = msg }
+                    Value = new ResultDto() { ErrorMsg = error }
                 });
             }
             //3.return others
@@ -101,7 +85,7 @@ namespace BaseWeb.Attributes
             else
             {
                 //return error msg for client side
-                var json = _Json.GetError(msg);
+                var json = _Json.GetError(error);
                 context.Result = new ContentResult()
                 {
                     Content = _Json.ToStr(json),

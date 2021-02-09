@@ -3,10 +3,10 @@
     /// <summary>
     /// locale resource for base class
     /// </summary>
-    public class BaseResourceDto
+    public class BaseResDto
     {
         //constructor
-        public BaseResourceDto()
+        public BaseResDto()
         {
             PlsSelect = "-Select-";
             FrontDateFormat = "yyyy/M/d";

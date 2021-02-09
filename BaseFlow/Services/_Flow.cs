@@ -1,6 +1,6 @@
-﻿using Base.Services;
-using BaseFlow.Enums;
-using BaseFlow.Models;
+﻿using Base.Enums;
+using Base.Models;
+using Base.Services;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
@@ -24,10 +24,18 @@ where u.Id='{0}'
         public static string SqlUserName = "select Name from dbo.[User] where Id='{0}'";
         public static string SqlDeptMgr = "select MgrId from dbo.Dept where Id='{0}'";
 
-        //create workflow signing rows
-        //userFid: field of user id that own row 
-        //return error msg if any
-        public static string CreateSignRows(JObject row, string userFid, string flowName, string sourceType, string sourceId, Db db)
+        /// <summary>
+        /// create workflow signing rows
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="userFid">field of user id that own row</param>
+        /// <param name="flowName"></param>
+        /// <param name="sourceType"></param>
+        /// <param name="sourceId"></param>
+        /// <param name="db"></param>
+        /// <returns>error msg if any</returns>
+        public static string CreateSignRows(JObject row, string userFid, string flowName, 
+            string sourceType, string sourceId, Db db)
         {
             //var
             //var profile = db.GetUserProfile();
@@ -265,9 +273,13 @@ insert into dbo._FlowSign(
             return error;
         }
 
-        //check is line match condition string or not
-        //refer Flow.js condStrToList()
-        //return: 1:match, 0:not match, other:error msg
+        /// <summary>
+        /// check is line match condition string or not
+        /// refer Flow.js condStrToList()
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="condStr"></param>
+        /// <returns>1:match, 0:not match, other:error msg</returns>
         private static string IsLineMatch(JObject row, string condStr)
         {
             if (string.IsNullOrEmpty(condStr))

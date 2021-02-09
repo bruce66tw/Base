@@ -1,8 +1,8 @@
-﻿using BaseFlow.Enums;
+﻿//using Base.Enums;
 
-namespace BaseFlow.Models
+namespace Base.Models
 {
-	//簽核流程線
+	//workflow sign line
     public class SignLineDto
     {
         public string FromNodeId { get; set; }

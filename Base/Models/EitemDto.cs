@@ -26,7 +26,7 @@ namespace Base.Models
         /// <summary>
         /// default value when add new
         /// </summary>
-        //public object DefaultValue;
+        public object Value;
 
         //required or not
         public bool Required = false;

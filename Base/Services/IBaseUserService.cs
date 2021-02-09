@@ -2,9 +2,9 @@
 
 namespace Base.Services
 {
-    public interface IBaseUserInfoService
+    public interface IBaseUserService
     {
         //get base info dto
-        BaseUserInfoDto GetData();
+        BaseUserDto GetData();
     }
 }

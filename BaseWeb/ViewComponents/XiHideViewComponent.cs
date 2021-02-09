@@ -12,10 +12,11 @@ namespace BaseWeb.ViewComponents
         /// <param name="fid"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public HtmlString Invoke(string fid, string value = "")
+        public HtmlString Invoke(string fid, string value = "", string extAttr = "", string extClass = "")
         {
-            //var isInDt = _Helper.IsInDt(title);
-            var attr = _Helper.GetBaseAttr(fid);
+            var attr = _Helper.GetBaseAttr(fid, true, extAttr);
+            if (!string.IsNullOrEmpty(extClass))
+                attr += $" class='{extClass}'";
             var html = $"<input{attr} data-type='text' type='hidden' value='{value}'>";
             return new HtmlString(html);
         }

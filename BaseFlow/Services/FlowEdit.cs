@@ -6,69 +6,93 @@ namespace BaseFlow.Services
 {
     public class FlowEdit
     {
-        private EditModel GetCrud()
+        private EditDto GetDto()
         {
-            return new EditModel()
+            return new EditDto()
             {
-                Table = "dbo.Db",
-                Kid = "Id",
+                Table = "dbo.Flow",
+                PkeyFid = "Id",
                 Col4 = null,
                 Items = new [] {
-                    new EitemModel { Fid = "Id" },
-                    new EitemModel { Fid = "Name", Required = true },
-                    new EitemModel { Fid = "ConnectStr", Required = true },
-                    new EitemModel { Fid = "Note" },
+                    new EitemDto { Fid = "Id" },
+                    new EitemDto { Fid = "Code", Required = true },
+                    new EitemDto { Fid = "Name", Required = true },
+                    new EitemDto { Fid = "Portrait", Value = "1" },
+                    new EitemDto { Fid = "Status", Value = "1" },
+                },
+                Childs = new EditDto[]
+                {
+                    new EditDto
+                    {
+                        Table = "dbo.FlowNode",
+                        PkeyFid = "Id",
+                        FkeyFid = "FlowId",
+                        Col4 = null,
+                        Items = new []
+                        {
+                            new EitemDto { Fid = "Id" },
+                            new EitemDto { Fid = "FlowId" },
+                            new EitemDto { Fid = "Name",    Required = true },
+                            new EitemDto { Fid = "NodeType", Required = true },
+                            new EitemDto { Fid = "EditForm" },
+                            new EitemDto { Fid = "LimitTime" },
+                            new EitemDto { Fid = "TimeUnit" },
+                            new EitemDto { Fid = "OverAct" },
+                            new EitemDto { Fid = "PosX", Required = true },
+                            new EitemDto { Fid = "PosY", Required = true },
+                            //new EitemDto { Fid = "Height", Required = true },
+                            //new EitemDto { Fid = "Width", Required = true },
+                            new EitemDto { Fid = "SignerType" },
+                            new EitemDto { Fid = "SignerId" },
+                        },
+                    },
+                    new EditDto
+                    {
+                        Table = "dbo.FlowLine",
+                        PkeyFid = "Id",
+                        FkeyFid = "FlowId",
+                        Col4 = null,
+                        Items = new []
+                        {
+                            new EitemDto { Fid = "Id" },
+                            new EitemDto { Fid = "FlowId" },
+                            //new EitemDto { Fid = "Name",    Required = true },
+                            new EitemDto { Fid = "CondStr" },
+                            new EitemDto { Fid = "StartNode", Required = true },
+                            new EitemDto { Fid = "EndNode",   Required = true },
+                            new EitemDto { Fid = "IsAgree" },
+                            new EitemDto { Fid = "PassType" },
+                            new EitemDto { Fid = "PassNum" },
+                            new EitemDto { Fid = "Sort", Required = true },
+                        },
+                    },
                 },
             };
         }
 
-        public JObject GetRow(string key)
+        private CrudEdit Service()
         {
-            return new CrudEdit().GetRow(GetCrud(), key);
+            return new CrudEdit(GetDto());
         }
 
-        //key為空白表示新增資料
-        public ErrorModel Save(bool isNew, JObject row)
+        public JObject GetJson(string key)
         {
-            /*
-            //set default value for new
-            if (isNew)
-            {
-                row["Id"] = _Str.NewId();
-                row["Status"] = 1;
-            }
-            */
-
-            return new CrudEdit().Save(GetCrud(), isNew, row, new WhenSave(WhenSave));
+            return Service().GetJson(key);
         }
 
-        //return error msg if any
-        private string WhenSave(bool isNew, JObject row)
+        public ResultDto Create(JObject json, FnSetNewKey fnSetNewKey)
         {
-            /*
-            //check input
-            if (_Str.IsEmpty(row["Code"]))
-                return "代碼不可空白。";
-            else if (_Str.IsEmpty(row["Name"]))
-                return "縣市名稱不可空白。";
-
-            //「代碼」不可重複。
-            var code = row["Code"].ToString();
-            var sql = isNew
-                ? string.Format("select Code from dbo.Project where Code='{0}'", code)
-                : string.Format("select Code from dbo.Project where Code='{0}' and Id != '{1}'", code, row["Id"].ToString());
-            if (_Db.GetJson(sql) != null)
-                return "代碼已經存在。";
-            */
-
-            //case of ok
-            return "";
+            return Service().Create(json, fnSetNewKey);
         }
 
-        public ErrorModel DeleteRows(string[] keys)
+        public ResultDto Update(string key, JObject json, FnSetNewKey fnSetNewKey)
         {
-            //check before delete
-            return new CrudEdit().DeleteRow(GetCrud(), keys);
+            return Service().Update(key, json, fnSetNewKey);
+        }
+
+        public ResultDto Delete(string key)
+        {
+            return Service().Delete(key);
         }
 
     } //class

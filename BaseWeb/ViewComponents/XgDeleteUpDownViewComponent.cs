@@ -7,18 +7,21 @@ namespace BaseWeb.ViewComponents
     public class XgDeleteUpDownViewComponent : ViewComponent
     {
         //use button for control status
-        //mName: multiple table name
-        public HtmlString Invoke(string mName)
+        //mName: EditMany.js variables name
+        public HtmlString Invoke(string mName, string fnDeleteRow = "")
         {
+            if (string.IsNullOrEmpty(fnDeleteRow))
+                fnDeleteRow = $"{mName}.onDeleteRow(this)";
+
             var html = $@"
-<button type='button' class='btn btn-link' onclick='{mName}.onDeleteRow(this)'>
-    <i class='icon-times'></i>
+<button type='button' class='btn btn-link' onclick='{fnDeleteRow}'>
+    <i class='ico-delete'></i>
 </button>
 <button type='button' class='btn btn-link' onclick='_table.rowMoveUp(this)'>
-    <i class='icon-up'></i>
+    <i class='ico-up'></i>
 </button>
 <button type='button' class='btn btn-link' onclick='_table.rowMoveDown(this)'>
-    <i class='icon-down'></i>
+    <i class='ico-down'></i>
 </button>";
             return new HtmlString(html);
         }        

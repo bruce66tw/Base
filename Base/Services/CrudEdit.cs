@@ -31,6 +31,7 @@ namespace Base.Services
         private const string Deletes = "_deletes";  //delete key string list
         private const string Childs = "_childs";    //child json list
         private const string FkeyFid = "_fkeyfid";  //foreign key fid
+        private const string IsNew = "_isNew";      //crud field for is new row or not
 
         //master edit
         private EditDto _edit;
@@ -46,8 +47,8 @@ namespace Base.Services
         //now time
         private DateTime _now;
 
-        //new key json, format: t + levelStr = json, ex: t02 = {xxx}
-        private JObject _newKey = new JObject();
+        //new key json, format: t + levelStr = json, ex: t02 = { fxx1 = key1, fxx2 = key2}
+        private JObject _newKeyJson = new JObject();
 
         //constructor
         //public CrudEdit(EditDto edit, string dbStr = "", object dbBox = null)
@@ -335,13 +336,13 @@ namespace Base.Services
         /// <returns>JArray</returns>
         public JArray GetChildRows(JObject upJson, int childIdx)
         {
-            if (upJson == null || upJson[Rows] == null)
+            if (upJson == null || upJson[Childs] == null)
                 return null;
 
-            var rows = upJson[Rows] as JArray;
-            return (rows.Count < childIdx + 1)
+            var childs = upJson[Childs] as JArray;
+            return (childs.Count < childIdx + 1 || childs[childIdx][Rows] == null)
                 ? null
-                : rows;
+                : childs[childIdx][Rows] as JArray;
         }
 
         /// <summary>
@@ -355,7 +356,7 @@ namespace Base.Services
             if (upJson == null || upJson[Childs] == null)
                 return null;
 
-            JArray childs = upJson[Childs] as JArray;
+            //JArray childs = upJson[Childs] as JArray;
             return (upJson[Childs].Count() <= childIdx
                     || _Json.IsEmpty(upJson[Childs][childIdx] as JObject))
                 ? null
@@ -393,7 +394,6 @@ namespace Base.Services
                         return false;
                 }
             }
-
         }
         */
 
@@ -403,10 +403,12 @@ namespace Base.Services
         /// <param name="edit"></param>
         /// <param name="row"></param>
         /// <returns>0 if not new row</returns>
+        /*
         private int ParsePkey(EditDto edit, JObject row)
         {
             return ParseCol(row, edit.PkeyFid);
         }
+        */
 
         //parse foreign key
         private int ParseFkey(JObject row)
@@ -427,9 +429,25 @@ namespace Base.Services
                 0;
         }
 
-        private bool IsNewRow(EditDto edit, JObject row)
+        /// <summary>
+        /// check is new key or not by kid
+        /// </summary>
+        /// <param name="row"></param>
+        /// <param name="kid"></param>
+        /// <returns></returns>
+        private bool IsNewKey(JObject row, string kid)
         {
-            return ParsePkey(edit, row) > 0;
+            return ParseCol(row, kid) > 0;
+        }
+
+        /// <summary>
+        /// check is new row or not by IsNew field
+        /// </summary>
+        /// <param name="row"></param>
+        /// <returns></returns>
+        private bool IsNewRow(JObject row)
+        {
+            return (row[IsNew] != null && row[IsNew].ToString() == "1");
         }
 
         /*
@@ -502,8 +520,8 @@ namespace Base.Services
         /// <param name="edit"></param>
         /// <param name="inputRow"></param>
         /// <param name="db"></param>
-        /// <returns>key</returns>
-        private string InsertRow(EditDto edit, JObject inputRow, Db db)
+        /// <returns>status</returns>
+        private bool InsertRow(EditDto edit, JObject inputRow, Db db)
         {
             //set key & map field
 
@@ -511,8 +529,9 @@ namespace Base.Services
             //reset sqlArgs first
             ResetArg();
 
+            /*
             //set new key
-            var key = "";
+            string key;
             if (edit.AutoNewId)
             {
                 key = _Str.NewId();
@@ -522,17 +541,16 @@ namespace Base.Services
             {
                 key = inputRow[edit.PkeyFid].ToString();
             }
+            */
 
-            /*
             //set default value
             edit.Items
-                .Where(a => a.DefaultValue != null)
+                .Where(a => a.Value != null)
                 .ToList()
                 .ForEach(a =>
                 {
-                    inputRow[a.Fid] = a.DefaultValue.ToString();
+                    inputRow[a.Fid] = a.Value.ToString();
                 });
-            */
 
             //prepare sql
             var fids = "";
@@ -549,7 +567,7 @@ namespace Base.Services
                 if (edit._FidNo[fid] == null)
                 {
                     _Log.Error("CrudEdit.cs InsertRow() field not existed(" + edit.Table + "." + fid + ")");
-                    return "";
+                    return false;
                 }
 
                 //skip not created field
@@ -572,7 +590,7 @@ namespace Base.Services
             if (fids == "")
             {
                 _Log.Error("CrudEdit.cs InsertRow() fields are empty.");
-                return "";
+                return false;
             }
 
             //set creator, created if need
@@ -603,7 +621,7 @@ namespace Base.Services
                 " (" + fids.Substring(0, fids.Length - 1) + ") Values (" + 
                 values.Substring(0, values.Length - 1) + ")";
             if (db.Update(sql, _sqlArgs) == 0)
-                return "";
+                return false;
             #endregion
 
             /*
@@ -626,7 +644,7 @@ namespace Base.Services
 
             //case of ok
             _saveRows++;
-            return key;
+            return true;
         }
 
         /*
@@ -656,161 +674,6 @@ namespace Base.Services
         //upData: 包含 _rows, _childs, _deletes(字串list)
         //步驟: 1.set key, 2.delete sub, 3.insert/update
         //return error msg if any
-
-        /// <summary>
-        /// validate and save(recursive)
-        /// </summary>
-        /// <param name="hasFkey">table has foreign key or not</param>
-        /// <param name="levelStr">level concat string, ex:0,00,012</param>
-        /// <param name="upNewKey">empty for level0, string for level1, JObject for level2...
-        /// <param name="upDeletes">empty for level0</param>
-        /// <param name="edit"></param>
-        /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
-        /// <param name="db"></param>
-        /// <returns></returns>
-        private bool SaveJson(bool hasFkey, string levelStr, JObject upNewKey,
-            List<string> upDeletes, JObject inputJson, EditDto edit, Db db)
-        {
-            if (inputJson == null)
-                return true;
-
-            var levelLen = levelStr.Length;
-            var isLevel0 = (levelLen == 1);
-
-            #region delete first & get deleted list for child(if need)
-            List<string> deletes = (inputJson[Deletes] == null)
-                ? null : _Str.ToList(inputJson[Deletes].ToString());
-            if (deletes != null)
-            {
-                //deleted key, no special char !!
-                if (isLevel0 && !_List.IsAlphaNum(deletes, "CrudEdit.cs SaveJson()"))
-                    return false;
-
-                //if no Fkey, use deleted key for child's upKey
-                if (!hasFkey)
-                    deletes = _List.Concat(deletes, GetKeysByUpKeys(edit, upDeletes, db));
-
-                if (!DeleteRowsByKeys(edit, deletes, db))
-                    return false;
-            }
-            #endregion
-
-            #region insert/update this rows
-            var inputRows = (inputJson[Rows] == null)
-                ? null : inputJson[Rows] as JArray;
-            //var key = "";   //this key
-            JObject upNewKey2 = new JObject(); //new pkey for childs fkey
-            if (inputRows != null)
-            {
-                var kid = edit.PkeyFid;
-                foreach (var inputRow0 in inputRows)
-                {
-                    //inputRow0 could be null, save to var first, or will error
-                    if (inputRow0 == null || !inputRow0.HasValues)
-                        continue;
-
-                    //insert/update this
-                    var inputRow = inputRow0 as JObject;
-                    if (HasField(inputRow, kid))
-                    {
-                        var pkeyIdx = ParsePkey(edit, inputRow);
-                        if (pkeyIdx < 0)
-                        {
-                            //<0 means empty pkey, main edit allows empty pkey
-                            if (isLevel0 && inputRows.Count == 1)
-                                pkeyIdx = 1;    //adjust, let it be new
-                            else
-                            {
-                                _Log.Error("CrudEdit.cs SaveJson() failed: can not get PkeyFid (" + edit.PkeyFid + ")");
-                                return false;
-                            }
-                        }
-
-                        if (pkeyIdx == 0)
-                        {
-                            //=0 means has pkey(ex:'ABC12DEFG'), case of update row
-                            if (!UpdateRow(edit, inputRow, db))
-                                return false;
-                        }
-                        else
-                        {
-                            //case of insert row
-                            #region set foreign key value for not level0
-                            if (!isLevel0)
-                            {
-                                var fkeyIdx = ParseFkey(inputRow);
-                                if (fkeyIdx < 0)
-                                {
-                                    if (levelLen == 2)
-                                    {
-                                        fkeyIdx = 1;    //adjust
-                                    }
-                                    else
-                                    {
-                                        _Log.Error("CrudEdit.cs SaveJson() failed: can not get FkeyFid (" + edit.FkeyFid + ")");
-                                        return false;
-                                    }
-                                } 
-
-                                if (fkeyIdx == 0)
-                                {
-                                    inputRow[edit.FkeyFid] = inputRow[FkeyFid].ToString();
-                                }
-                                else if (upNewKey == null)
-                                {
-                                    _Log.Error("CrudEdit.cs SaveJson() failed: can not get MapFid (" + edit.FkeyFid + ")");
-                                    return false;
-                                }
-                                else
-                                {
-                                    //此時upKeyData為key json (levelLen >= 3)
-                                    inputRow[edit.FkeyFid] = upNewKey["f" + fkeyIdx];
-                                }
-                            }
-                            #endregion
-
-                            var key = InsertRow(edit, inputRow, db);
-                            if (key == "")
-                                return false;
-
-                            //set upKeyData for child 
-                            upNewKey2["f" + pkeyIdx] = key;
-                        }
-                    }
-                }//for rows
-            }//if
-            #endregion
-
-            #region insert/update childs(recursive)
-            //levelStr++;
-            var childLen = GetEditChildLen(edit);
-            for (var i = 0; i < childLen; i++)
-            {
-                //get child json
-                JObject childJson = (inputJson[Childs] == null ||
-                        inputJson[Childs].Count() <= i ||
-                        inputJson[Childs][i] == null ||
-                        _Json.IsEmpty(inputJson[Childs][i] as JObject))
-                    ? null 
-                    : inputJson[Childs][i] as JObject;
-
-                //recursive call
-                if (!SaveJson(hasFkey, levelStr + i, upNewKey2, deletes, childJson, edit.Childs[i], db))
-                    return false;
-            }//for childs
-            #endregion
-
-            //set instance variables
-            _newKey["t" + levelStr] = upNewKey2;
-
-            //case of ok
-            return true;
-        }
-
-        public JObject GetNewKey()
-        {
-            return _newKey;
-        }
 
         /*
         //mapKey的內容為數字
@@ -1109,7 +972,7 @@ namespace Base.Services
                 return true;
 
             #region check required & fid existed
-            if (IsNewRow(edit, row))
+            if (IsNewKey(row, edit.PkeyFid))
             {
                 //check required
                 foreach (var fid in edit._FidRequires)
@@ -1365,9 +1228,10 @@ namespace Base.Services
         /// <param name="json"></param>
         /// <param name="fnAfterSave"></param>
         /// <returns>ResultDto</returns>
-        public ResultDto SaveCreate(JObject json, AfterSave fnAfterSave = null)
+        public ResultDto Create(JObject json,
+            FnSetNewKey fnSetNewKey = null, FnAfterSave fnAfterSave = null)
         {
-            return Save("", json, fnAfterSave);
+            return SaveJson("", json, fnSetNewKey, fnAfterSave);
         }
 
         /// <summary>
@@ -1377,31 +1241,34 @@ namespace Base.Services
         /// <param name="json"></param>
         /// <param name="fnAfterSave"></param>
         /// <returns>ResultDto</returns>
-        public ResultDto SaveUpdate(string key, JObject json, AfterSave fnAfterSave = null)
+        public ResultDto Update(string key, JObject json,
+            FnSetNewKey fnSetNewKey = null, FnAfterSave fnAfterSave = null)
         {
             //return error if empty key
             if (string.IsNullOrEmpty(key))
                 return new ResultDto()
                 {
-                    ErrorMsg = "CrudEdit.cs SaveUpdate() failed: key is empty."
+                    ErrorMsg = "CrudEdit.cs Update() failed: key is empty."
                 };
 
-            return Save(key, json, fnAfterSave);
+            return SaveJson(key, json, fnSetNewKey, fnAfterSave);
         }
 
         /// <summary>
         /// save rows including delete rows, use transaction
+        /// called by Create(), Update()
         /// </summary>
-        /// <param name="json"></param>
-        /// <param name="afterSave"></param>
+        /// <param name="inputJson">input json</param>
+        /// <param name="fnAfterSave"></param>
         /// <returns></returns>
-        private ResultDto Save(string key, JObject json, AfterSave afterSave = null)
+        private ResultDto SaveJson(string key, JObject inputJson, 
+            FnSetNewKey fnSetNewKey = null, FnAfterSave fnAfterSave = null)
         {
             //check input & set fidNos same time
             Db db = null;
             var error = string.Empty;
             var trans = IsTrans(_edit);
-            if (json == null)
+            if (inputJson == null)
             {
                 error = "input json is null";
                 goto lab_error;
@@ -1412,7 +1279,7 @@ namespace Base.Services
 
             //check main row
             //SetFidNo(_edit);
-            if (!ValidJson(0, _edit, json))
+            if (!ValidJson(0, _edit, inputJson))
             {
                 error = "ValidJson() failed.";
                 goto lab_error;
@@ -1445,6 +1312,16 @@ namespace Base.Services
             //    goto lab_error;
             */
 
+            //set new key
+            var status = (fnSetNewKey == null)
+                ? SetNewKey(inputJson, _edit)
+                : fnSetNewKey(this, inputJson, _edit);
+            if (!status)
+            {
+                error = "SetNewKey() failed.";
+                goto lab_error;
+            }
+
             //transaction if need
             db = GetDb();
             if (trans)
@@ -1455,7 +1332,7 @@ namespace Base.Services
 
             //改用 DB自行delete
             //var json = new JObject() { [Rows] = new JArray() { row } };
-            if (!SaveJson(_edit.HasFKey, "0", null, null, json, _edit, db))
+            if (!SaveJson2(_edit.HasFKey, "0", null, inputJson, _edit, db))
                 goto lab_error;
 
             /*
@@ -1517,11 +1394,11 @@ namespace Base.Services
             */
 
             //call afterSave() if need
-            if (afterSave != null)
+            if (fnAfterSave != null)
             {
                 try
                 {
-                    error = afterSave(db);
+                    error = fnAfterSave(db);
                     if (error != "")
                         goto lab_error;
                 }
@@ -1556,13 +1433,276 @@ namespace Base.Services
             }
         }
 
-        //delete row for single table
+        /// <summary>
+        /// validate and save(recursive)
+        /// </summary>
+        /// <param name="hasFkey">table has foreign key or not</param>
+        /// <param name="levelStr">level concat string, ex:0,00,012</param>
+        /// <param name="upDeletes">empty for level0</param>
+        /// <param name="edit"></param>
+        /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        private bool SaveJson2(bool hasFkey, string levelStr, List<string> upDeletes, 
+            JObject inputJson, EditDto edit, Db db)
+        {
+            if (inputJson == null)
+                return true;
+
+            var levelLen = levelStr.Length;
+            var isLevel0 = (levelLen == 1);
+
+            #region delete first & get deleted list for child(if need)
+            List<string> deletes = (inputJson[Deletes] == null)
+                ? null : _Str.ToList(inputJson[Deletes].ToString());
+            if (deletes != null)
+            {
+                //deleted key, no special char !!
+                if (isLevel0 && !_List.IsAlphaNum(deletes, "CrudEdit.cs SaveJson()"))
+                    return false;
+
+                //if no Fkey, use deleted key for child's upKey
+                if (!hasFkey)
+                    deletes = _List.Concat(deletes, GetKeysByUpKeys(edit, upDeletes, db));
+
+                if (!DeleteRowsByKeys(edit, deletes, db))
+                    return false;
+            }
+            #endregion
+
+            #region insert/update this rows
+            var inputRows = (inputJson[Rows] == null)
+                ? null : inputJson[Rows] as JArray;
+            JObject upNewKey2 = new JObject(); //new pkey for childs fkey
+            if (inputRows != null)
+            {
+                var kid = edit.PkeyFid;
+                foreach (var inputRow0 in inputRows)
+                {
+                    //inputRow0 could be null, save to var first, or will error
+                    if (inputRow0 == null || !inputRow0.HasValues)
+                        continue;
+
+                    //insert/update this
+                    var inputRow = inputRow0 as JObject;
+                    if (!HasField(inputRow, kid))
+                        continue;
+
+                    if (IsNewRow(inputRow))
+                    {
+                        if (!InsertRow(edit, inputRow, db))
+                            return false;
+                    }
+                    else
+                    {
+                        if (!UpdateRow(edit, inputRow, db))
+                            return false;
+                    }
+                }//for rows
+            }//if
+            #endregion
+
+            #region insert/update childs(recursive)
+            var childLen = GetEditChildLen(edit);
+            for (var i = 0; i < childLen; i++)
+            {
+                //recursive call
+                var childJson = GetChildJson(inputJson, i);
+                if (!SaveJson2(hasFkey, levelStr + i, deletes, childJson, edit.Childs[i], db))
+                    return false;
+            }//for childs
+            #endregion
+
+            //case of ok
+            return true;
+        }
+
+        public JObject GetNewKey()
+        {
+            return _newKeyJson;
+        }
+
+        public bool SetNewKey(JObject inputJson, EditDto edit)
+        {
+            return SetNewKey2("0", null, inputJson, edit);
+        }
+
+        /// <summary>
+        /// set new key(recursive), called by SetNewKey()
+        /// </summary>
+        /// <param name="levelStr">level concat string, ex:0,00,012</param>
+        /// <param name="upNewKey">empty for level0, string for level1, JObject for level2...
+        /// <param name="edit"></param>
+        /// <param name="inputJson">JObject for level0, JArray for level1/2</param>
+        /// <returns>status</returns>
+        private bool SetNewKey2(string levelStr, JObject upNewKey, JObject inputJson, EditDto edit)
+        {
+            if (inputJson == null)
+                return true;
+
+            var levelLen = levelStr.Length;
+            var isLevel0 = (levelLen == 1);
+
+            #region insert/update this rows
+            var inputRows = (inputJson[Rows] == null)
+                ? null : inputJson[Rows] as JArray;
+            JObject upNewKey2 = new JObject(); //new pkey for childs fkey
+            if (inputRows != null)
+            {
+                var kid = edit.PkeyFid;
+                foreach (var inputRow0 in inputRows)
+                {
+                    //inputRow0 could be null, save to var first, or will error
+                    if (inputRow0 == null || !inputRow0.HasValues)
+                        continue;
+
+                    //insert/update this
+                    var inputRow = inputRow0 as JObject;
+                    if (HasField(inputRow, kid))
+                    {
+                        //adjust pkeyIdx if need
+                        var pkeyIdx = ParseCol(inputRow, kid);
+                        if (pkeyIdx < 0)
+                        {
+                            //< 0 means empty pkey, main edit allows empty pkey
+                            if (isLevel0 && inputRows.Count == 1)
+                                pkeyIdx = 1;    //adjust, let it be new
+                            else
+                            {
+                                _Log.Error("CrudEdit.cs SaveJson() failed: can not get PkeyFid (" + edit.PkeyFid + ")");
+                                return false;
+                            }
+                        }
+
+                        //case of insert row
+                        if (pkeyIdx != 0)
+                        {
+                            #region set foreign key value for not level0
+                            if (!isLevel0)
+                            {
+                                var fkeyIdx = ParseFkey(inputRow);
+                                if (fkeyIdx < 0)
+                                {
+                                    if (levelLen == 2)
+                                    {
+                                        fkeyIdx = 1;    //adjust
+                                    }
+                                    else
+                                    {
+                                        _Log.Error("CrudEdit.cs SaveJson() failed: can not get FkeyFid (" + edit.FkeyFid + ")");
+                                        return false;
+                                    }
+                                }
+
+                                if (fkeyIdx == 0)
+                                {
+                                    inputRow[edit.FkeyFid] = inputRow[FkeyFid].ToString();
+                                }
+                                else if (upNewKey == null)
+                                {
+                                    _Log.Error("CrudEdit.cs SaveJson() failed: can not get MapFid (" + edit.FkeyFid + ")");
+                                    return false;
+                                }
+                                else
+                                {
+                                    //now upKeyData is key json (levelLen >= 3)
+                                    inputRow[edit.FkeyFid] = upNewKey["f" + fkeyIdx];
+                                }
+                            }
+                            #endregion
+
+                            //get new key
+                            var key = _Str.NewId();
+                            inputRow[kid] = key;
+                            inputRow[IsNew] = "1";  //string
+
+                            //set upKeyData for child 
+                            upNewKey2["f" + pkeyIdx] = key;
+                        }
+                    }//if row has fields
+                }//for rows
+            }//if has rows
+            #endregion
+
+            #region set childs new key (recursive)
+            var childLen = GetEditChildLen(edit);
+            for (var i = 0; i < childLen; i++)
+            {
+                //recursive call
+                var childJson = GetChildJson(inputJson, i);
+                if (!SetNewKey2(levelStr + i, upNewKey2, childJson, edit.Childs[i]))
+                    return false;
+            }
+            #endregion
+
+            //set instance variables
+            _newKeyJson["t" + levelStr] = upNewKey2;
+
+            //case of ok
+            return true;
+        }
+
+        /// <summary>
+        /// FnSetNewKey() can call.
+        /// </summary>
+        /// <param name="levelStr"></param>
+        /// <returns></returns>
+        public bool SetRelatId(JObject inputJson, int childIdx, string fid, string fromLevelStr)
+        {
+            //get child rows
+            string error;
+            var rows = GetChildRows(inputJson, childIdx);
+            if (rows == null)
+                return true;
+
+            //get table json first by levelStr
+            var jsonFid = "t" + fromLevelStr;
+            var json = (_newKeyJson[jsonFid] == null)
+                ? null : (JObject)_newKeyJson[jsonFid];
+
+            foreach (var row0 in rows)
+            {
+                if (row0 == null || !row0.HasValues)
+                    continue;
+
+                //has row need set or not
+                var row = row0 as JObject;
+                var keyIndex = ParseCol(row, fid);
+                if (keyIndex > 0)
+                {
+                    if (json == null)
+                    {
+                        error = $"no _newKeyJson[{jsonFid}]";
+                        goto labError;
+                    }
+
+                    row[fid] = json["f" + keyIndex].ToString();
+                }
+            }
+
+            //case ok ok
+            return true;
+
+        labError:
+            _Log.Error("CrudEdit.cs SetRelatId() failed: " + error);
+            return false;
+        }
+
+        /// <summary>
+        /// delete row for single table
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public ResultDto Delete(string key)
         {
             return DeleteByKeys(new List<string>() { key });
         }
 
-        //delete rows for multiple tables
+        /// <summary>
+        /// delete rows for multiple tables
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <returns></returns>
         public ResultDto DeleteByKeys(List<string> keys)
         {
             //check input
@@ -1582,7 +1722,7 @@ namespace Base.Services
             SetNow();
 
             var json = new JObject() { [Deletes] = _List.ToStr(keys, false) };
-            if (!SaveJson(_edit.HasFKey, "0", null, null, json, _edit, db))
+            if (!SaveJson2(_edit.HasFKey, "0", null, json, _edit, db))
                 goto lab_error;
 
             /*
@@ -1617,9 +1757,13 @@ namespace Base.Services
             return _Fun.GetSystemError();
         }
 
-        //delete rows of one table, input pkey list
-        //keys: can be multi pkey value(consider seperator)
-        //return error msg if any
+        /// <summary>
+        /// delete rows of one table, input pkey list
+        /// </summary>
+        /// <param name="edit"></param>
+        /// <param name="keys">can be multi pkey value(consider seperator)</param>
+        /// <param name="db"></param>
+        /// <returns>status</returns>
         private bool DeleteRowsByKeys(EditDto edit, List<string> keys, Db db = null)
         {
             //check input
