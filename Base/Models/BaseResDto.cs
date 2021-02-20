@@ -9,7 +9,7 @@
         public BaseResDto()
         {
             PlsSelect = "-Select-";
-            FrontDateFormat = "yyyy/M/d";
+            //FrontDateFormat = "yyyy/M/d";
             //FrontDtFormat = "yyyy/M/d HH:mm:ss";   //24hour
         }
 
@@ -36,7 +36,7 @@
         public string TipDeleteRow { get; set; }
 
         //for sql read datetime column to front
-        public string FrontDateFormat { get; set; }
+        //public string FrontDateFormat { get; set; }
         //public string FrontDtFormat { get; set; }
 
         //no access right for program

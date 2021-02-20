@@ -10,7 +10,7 @@
         {
             SystemName = "管理系統";
             DefaultLocale = "zh-TW";
-            FrontDtFormat = "yyyy/M/d HH:mm:ss";
+            //FrontDtFormat = "yyyy/M/d HH:mm:ss";
             ServerId = "A";
             SlowSql = 1000;
             LogInfo = false;
@@ -32,8 +32,8 @@
         //default locale code
         public string DefaultLocale { get; set; }
 
-        //front datetime format for db read datetime column
-        public string FrontDtFormat { get; set; }
+        //front datetime format for: (1)front UI, (2)db read datetime column
+        //public string FrontDtFormat { get; set; }
         
         //server Id for new key
         public string ServerId { get; set; }

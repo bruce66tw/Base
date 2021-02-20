@@ -1,5 +1,4 @@
-﻿using Base.Models;
-using BaseWeb.Services;
+﻿using BaseWeb.Services;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,10 +8,9 @@ namespace BaseWeb.ViewComponents
     {
         //async
         public HtmlString Invoke(string title, string fid, string value,
-            int maxLen = 0, bool required = false, bool inRow = false, 
-            string type = "text", bool editable = true, string width = "100%",
-            string labelTip = "", string inputTip = "",
-            string extAttr = "", string extClass = "", 
+            bool editable = true, bool inRow = false, bool required = false,  
+            string type = "text", int maxLen = 0, string width = "100%",
+            string labelTip = "", string inputTip = "", string extAttr = "", string extClass = "", 
             string cols = "")
         {
             //prop ??= new PropTextDto();

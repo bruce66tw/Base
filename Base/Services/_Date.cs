@@ -16,11 +16,11 @@ namespace Base.Services
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns>days difference, return 0 if same</returns>
-        public static int DayDiff(DateTime start, DateTime end)
+        public static int DayDiff(DateTime? start, DateTime? end)
         {
-            return (start == end)
+            return (start == null || end == null || start == end)
                 ? 0
-                : (end - start).Days;
+                : (end.Value - start.Value).Days;
         }
 
         /// <summary>
@@ -36,9 +36,7 @@ namespace Base.Services
 
             try
             {
-                var start2 = DateTime.Parse(start);
-                var end2 = DateTime.Parse(end);
-                return DayDiff(start2, end2);
+                return DayDiff(CsToDt(start), CsToDt(end));
             }
             catch(Exception ex)
             {
@@ -53,9 +51,11 @@ namespace Base.Services
         /// <param name="start"></param>
         /// <param name="end"></param>
         /// <returns></returns>
-        public static double MiniSecDiff(DateTime start, DateTime end)
+        public static double MiniSecDiff(DateTime? start, DateTime? end)
         {
-            return (end - start).TotalMilliseconds;
+            return (start == null || end == null)
+                ? 0
+                : (end.Value - start.Value).TotalMilliseconds;
         }
 
         //2 min second string difference
@@ -66,9 +66,7 @@ namespace Base.Services
 
             try
             {
-                var start2 = DateTime.Parse(start);
-                var end2 = DateTime.Parse(end);
-                return MiniSecDiff(start2, end2);
+                return MiniSecDiff(CsToDt(start), CsToDt(end));
             }
             catch (Exception ex)
             {
@@ -143,6 +141,15 @@ namespace Base.Services
             return DateTime.Now.ToString("yyyyMMdd_HHmmss");
         }
 
+        /// <summary>
+        /// now db datetime string
+        /// </summary>
+        /// <returns></returns>
+        public static string NowDbStr()
+        {
+            return ToDbStr(DateTime.Now);
+        }
+
         /*
         //today string
         public static string TodayStr()
@@ -157,23 +164,20 @@ namespace Base.Services
         }
         */
         #endregion
-        
+
         #region date convert
         /// <summary>
         /// get dt string for write db
         /// TODO: check other database engine
+        /// oracle: TO_CHAR(date_of_birth, 'DD/MON/YYYY HH24:MI:SS')
         /// </summary>
         /// <returns>datetime string</returns>
         public static string ToDbStr(DateTime dt)
         {
-            return (_Fun.GetDbType() == DbTypeEnum.MSSql)
-                ? dt.ToString("yyyy-MM-dd HH:mm:ss")
+            var dbType = _Fun.GetDbType();
+            return (dbType == DbTypeEnum.MSSql || dbType == DbTypeEnum.MySql)
+                ? dt.ToString(_Fun.DbDtFormat)
                 : "";
-        }
-
-        public static string NowDbStr()
-        {
-            return ToDbStr(DateTime.Now);
         }
 
         /// <summary>
@@ -210,15 +214,19 @@ namespace Base.Services
             return dt.ToString("HH:mm");
         }
 
-        //to tick
-        public static long ToTick(DateTime dt)
+        /// <summary>
+        /// hour min to hm string (hh:mm)
+        /// </summary>
+        /// <param name="hour"></param>
+        /// <param name="min"></param>
+        /// <returns></returns>
+        public static string HmToHm5(int hour, int min)
         {
-            var date0 = new DateTime(1970, 1, 1);
-            return (dt.Ticks - date0.Ticks) / 10000000 - 8 * 60 * 60;
+            return hour.ToString("00") + ":" + min.ToString("00");
         }
 
-        //to age
-        public static int ToAge(DateTime? birth)
+        //birth to age
+        public static int BirthToAge(DateTime? birth)
         {
             if (birth == null)
                 return 0;
@@ -230,22 +238,18 @@ namespace Base.Services
             return age;
         }
 
-        //convert datetime string to time(unix time)
-        public static long StrToTick(string dt)
+        /// <summary>
+        /// datetime to tick
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        public static long ToTick(DateTime? dt)
         {
-            return ToTick(Convert.ToDateTime(dt));
-        }
+            if (dt == null)
+                return 0;
 
-        //string to date
-        public static DateTime StrToDate(string dt)
-        {
-            return DateTime.Parse(dt).Date;
-        }
-
-        //string to datetime
-        public static DateTime? StrToDt(string dt)
-        {
-            return string.IsNullOrEmpty(dt) ? (DateTime?)null : DateTime.Parse(dt);
+            var date0 = new DateTime(1970, 1, 1);
+            return (dt.Value.Ticks - date0.Ticks) / 10000000 - 8 * 60 * 60;
         }
 
         //tick to datetime
@@ -256,24 +260,62 @@ namespace Base.Services
             return dt.AddSeconds(tick).ToLocalTime();
         }
 
-        //hour min to hm string (hh:mm)
-        public static string HmToHm5(int hour, int min)
+        /// <summary>
+        /// cs datetime string to tick
+        /// </summary>
+        /// <param name="dt">_Fun.CsDtFormat</param>
+        /// <returns></returns>
+        public static long CsToTick(string dt)
         {
-            return hour.ToString("00") + ":" + min.ToString("00");
+            return ToTick(CsToDt(dt));
         }
 
         /// <summary>
-        /// frontEnd datetime string to backEnd datetime, consider locale type
+        /// cs datetime string to datetime
         /// </summary>
-        /// <param name="dateStr">input date string</param>
+        /// <param name="dt">yyyy/MM/dd hh:mm:ss</param>
         /// <returns></returns>
-        public static DateTime FrontToBack(string dateStr)
+        public static DateTime? CsToDt(string dt)
         {
-            //var dt = Convert.ToDateTime(dateStr).ToString(XpService.DateFormat);
-            //var dt = DateTime.ParseExact(dateStr, XpService.DateFormat, CultureInfo.InvariantCulture);
-            //DateTime dt;
-            DateTime.TryParseExact(dateStr, _Fun.BackDateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt);
-            return dt;
+            if (string.IsNullOrEmpty(dt))
+                return null;
+
+            DateTime.TryParseExact(dt, _Fun.CsDtFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt2);
+            return dt2;
+        }
+
+        //string to date
+        public static DateTime? CsToDate(string dt)
+        {
+            var dt2 = CsToDt(dt);
+            return (dt2 == null)
+                ? (DateTime?)null : dt2.Value.Date;
+        }
+
+        /// <summary>
+        /// js datetime format string to datetime
+        /// </summary>
+        /// <param name="dt">datetime string</param>
+        /// <returns></returns>
+        /*
+        public static DateTime CsToDt(string dt)
+        {
+            DateTime.TryParseExact(dt, _Fun.CsDtFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt2);
+            return dt2;
+        }
+        */
+
+        /// <summary>
+        /// get date part string
+        /// </summary>
+        /// <param name="dt">any format of datetime string</param>
+        /// <returns></returns>
+        public static string GetDateStr(string dt)
+        {
+            var pos = dt.IndexOf(" ");
+            return (pos <= 0)
+                ? dt
+                : dt.Substring(0, pos);
         }
 
         /*
@@ -288,7 +330,8 @@ namespace Base.Services
         #endregion
 
         #region db related
-        //to date+hm string
+        /*
+        //to date+hm string ??
         public static string ToDateHmStr(DateTime? dt, DbFormatDto dbFormat)
         {
             return (dt == null)
@@ -299,7 +342,7 @@ namespace Base.Services
         //datetime string to date string
         public static string StrToDateStr(string dt, string format)
         {
-            return _Str.IsEmpty(dt)
+            return string.IsNullOrEmpty(dt)
                 ? ""
                 : ToDateStr(DateTime.Parse(dt), format);
         }
@@ -320,6 +363,7 @@ namespace Base.Services
                 : dt.Value.ToString(dbFormat.FrontDt);
             //: Convert.ToString(dt, new CultureInfo("ja-JP")).Trim();
         }
+        */
         #endregion
 
         #region chinese date

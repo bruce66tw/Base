@@ -336,13 +336,10 @@ namespace Base.Services
         /// <returns>JArray</returns>
         public JArray GetChildRows(JObject upJson, int childIdx)
         {
-            if (upJson == null || upJson[Childs] == null)
-                return null;
-
-            var childs = upJson[Childs] as JArray;
-            return (childs.Count < childIdx + 1 || childs[childIdx][Rows] == null)
+            var child = GetChildJson(upJson, childIdx);
+            return (child == null || child[Rows] == null)
                 ? null
-                : childs[childIdx][Rows] as JArray;
+                : child[Rows] as JArray;
         }
 
         /// <summary>

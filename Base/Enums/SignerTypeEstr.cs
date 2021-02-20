@@ -1,6 +1,6 @@
 ﻿namespace Base.Enums
 {
-    //match to _Code.Type="SignerType"
+    //match to Code.Type="SignerType"
     public static class SignerTypeEstr
     {
         public const string User = "U";         //assign user

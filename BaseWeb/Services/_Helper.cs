@@ -48,7 +48,8 @@ namespace BaseWeb.Services
         /// <param name="extAttr"></param>
         /// <param name="setNameAttr">set name attribute or not</param>
         /// <returns></returns>
-        public static string GetBaseAttr(string fid, bool editable = true, string extAttr = "", bool setNameAttr = true)
+        public static string GetBaseAttr(string fid, bool editable = true, 
+            string extAttr = "", bool setNameAttr = true)
         {
             //set data-fid, name
             var attr = $" data-fid='{fid}'";
@@ -106,37 +107,37 @@ namespace BaseWeb.Services
         /// get date view component html string
         /// </summary>
         /// <param name="fid"></param>
-        /// <param name="value"></param>
+        /// <param name="value">format: _Fun.Config.FrontDtFormat</param>
         /// <param name="required"></param>
-        /// <param name="prop"></param>
-        /// <param name="rb"></param>
         /// <returns></returns>
-        public static string GetDateStr(string fid, string value, bool required, PropDateDto prop, BaseResDto rb)
+        public static string GetDateHtml(string fid, string value,
+            bool editable, string inputTip,             
+            string extAttr, string extClass)
         {
             //TODO: base attribute
-            var attr = GetBaseAttr(fid) +
-                GetPlaceHolder(prop.PlaceHolder) +
-                GetRequired(required);
+            var attr = GetBaseAttr(fid, editable, extAttr) +
+                GetPlaceHolder(inputTip);
+                //GetRequired(required);
 
             //ext class
             //var extClass = GetExtClass(required, prop.ExtClass);
 
             //value -> date format
-            value = _Date.StrToDateStr(value, rb.FrontDateFormat);
+            value = _Date.GetDateStr(value);
 
             //placeholder may has quota, use escape
             //input add xd-date class for check date field !!
             //input-group & input-group-addon are need for datepicker.
-            return string.Format(@"
+            return $@"
 <div class='input-group date xg-date' data-provide='datepicker'>
-    <input{0} value='{1}' type='text' class='form-control xd-date {2}'>
+    <input{attr} value='{value}' type='text' class='form-control xd-date {extClass}'>
     <div class='input-group-addon'></div>
     <span>
         <i class='ico-delete' onclick='_idate.clean(this)'></i>
         <i class='ico-date' onclick='_idate.toggle(this)'></i>
     </span>
-</div>
-", attr, value, prop.ExtClass);
+</div>";
+
 //< span data-id2='{3}' class='{4}'></span>
 //", attr, value, extClass, fid + _WebFun.ErrTail, _WebFun.ErrLabCls);
 
@@ -148,22 +149,15 @@ namespace BaseWeb.Services
         /// <param name="br"></param>
         /// <param name="fid"></param>
         /// <param name="value"></param>
-        /// <param name="required"></param>
         /// <param name="rows"></param>
         /// <param name="prop"></param>
         /// <returns></returns>
-        /*
-        public static string GetSelectHtml(BaseResDto br, string fid, string value, 
-            bool required, List<IdStrDto> rows,
-            string inputTip,
-            bool editable, 
-            string extAttr, string extClass,
-            string fnOnChange, bool addEmptyRow,
-            PropSelectDto prop = null)
+        public static string GetSelectHtml(string fid, string value, List<IdStrDto> rows, 
+            bool editable = true, bool addEmptyRow = true, 
+            string inputTip = "", string extAttr = "", string extClass = "",
+            string fnOnChange = "")
         {
-            //prop ??= new PropSelectDto();
-
-            //attr
+            
             var attr = GetBaseAttr(fid, editable, extAttr) +
                 GetPlaceHolder(inputTip);
             if (fnOnChange != "")
@@ -174,16 +168,13 @@ namespace BaseWeb.Services
             //    extClass = " " + prop.ExtClass;
 
             //option item
-            var items = "";
-            const string htmlItem = "<option value='{0}'{2}>{1}</option>";
+            var optItems = "";
+            var tplOpt = "<option value='{0}'{2}>{1}</option>";
 
             //add first empty row & set its title='' to show placeHolder !!
             //if (prop != null && prop.Columns <= 1)
             if (addEmptyRow)
-            {
-                //var rb = _Locale.RB;
-                items += string.Format(htmlItem, "", br.PlsSelect, "title=''");
-            }
+                optItems += string.Format(tplOpt, "", _Fun.GetBaseRes().PlsSelect, "title=''");
             //{
             //    var item1 = (prop.PlaceHolder != "") ? prop.PlaceHolder : _Fun.Select;
             //    list += String.Format(htmlRow, "", item1, "");
@@ -193,7 +184,7 @@ namespace BaseWeb.Services
             for (var i = 0; i < len; i++)
             {
                 var selected = (value == rows[i].Id) ? " selected" : "";
-                items += string.Format(htmlItem, rows[i].Id, rows[i].Str, selected);
+                optItems += string.Format(tplOpt, rows[i].Id, rows[i].Str, selected);
             }
 
             //set data-width='100%' for RWD !!
@@ -201,10 +192,10 @@ namespace BaseWeb.Services
             //xg-select-col for dropdown inner width=100%, xg-select-colX for RWD width
             return $@"
 <select{attr} data-type='select' class='form-control xi-border {extClass}'>
-    {items}
+    {optItems}
 </select>";
+            
         }
-        */
 
         /// <summary>
         /// get input field html

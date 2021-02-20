@@ -16,8 +16,10 @@ namespace Base.Services
         public const string BaseUser = "_BaseUser";         //base user info
         public const string ProgAuthStrs = "_ProgAuthStrs"; //program autu string list
 
-        //date format for save into db
-        public const string BackDateFormat = "yyyy/M/d";
+        //c# datetime format, when front pass to c#, match to _fun.JsDtFormat
+        public const string CsDtFormat = "yyyy-MM-dd HH:mm:ss";
+        //moment js datetime format from db
+        //public const string JsDtFormat = "yyyy/M/d HH:mm:ss";
 
         //carrier
         public const string TextCarrier = "\r\n";     //for string
@@ -53,6 +55,12 @@ namespace Base.Services
         #endregion
 
         #region Db variables
+        //datetime format for read/write db, match to js _date.JsDtFormat
+        public static string DbDtFormat;
+
+        //moment js datetime format from db
+        //public static string JsDtFormat;
+
         //for read page rows
         public static string ReadPageSql;
 
@@ -122,6 +130,9 @@ namespace Base.Services
             switch (_dbType)
             {
                 case DbTypeEnum.MSSql:
+                    DbDtFormat = "yyyy-MM-dd HH:mm:ss";
+                    //JsDtFormat = "yyyy/M/d HH:mm:ss";
+
                     //for sql 2012, more easy
                     //note: offset/fetch not sql argument
                     ReadPageSql = @"
@@ -132,6 +143,8 @@ offset {2} rows fetch next {3} rows only
                     break;
 
                 case DbTypeEnum.MySql:
+                    DbDtFormat = "YYYY-MM-DD HH:mm:SS";
+
                     ReadPageSql = @"
 select {0} {1}
 limit {2},{3}
@@ -141,6 +154,8 @@ limit {2},{3}
                     break;
 
                 case DbTypeEnum.Oracle:
+                    DbDtFormat = "YYYY/MM/DD HH24:MI:SS";                    
+
                     //for Oracle 12c after(same as mssql)
                     ReadPageSql = @"
 Select {0} {1}

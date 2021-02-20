@@ -424,7 +424,7 @@ namespace Base.Services
         //called outside
         public JObject ReaderGetJson(IDataReader reader)
         {
-            var dtFormat = _Fun.Config.FrontDtFormat;
+            var dtFormat = _Fun.DbDtFormat;
             var row = new JObject();
             for (var i = 0; i < _colMap.Count; i++)
             {

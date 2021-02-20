@@ -171,25 +171,25 @@ order by l.FromNode, l.Sort
 insert into dbo._FlowSign(
     Id, SourceType, SourceId,
     NodeName, LevelNo, TotalLevel,
-    SignerId, SignerName, SignTime) values(
+    SignerValue, SignerName, SignTime) values(
     @Id, @SourceType, @SourceId,
     @NodeName, @LevelNo, @TotalLevel,
-    @SignerId, @SignerName, @SignTime
+    @SignerValue, @SignerName, @SignTime
 )
 ";
 
             //write first node
             var totalLevel = findIdxs.Count - 1;
             /*
-            string signerId = "", signerName = "";
+            string signerValue = "", signerName = "";
             if (row[userFid] == null)
             {
                 error = "row[" + userFid + "] is empty.";
                 goto lab_exit;
             }
 
-            signerId = row[userFid].ToString();
-            signerName = db.GetStr(string.Format(SqlUserName, signerId));
+            signerValue = row[userFid].ToString();
+            signerName = db.GetStr(string.Format(SqlUserName, signerValue));
 
             db.Update(sql, new List<object>() {
                 "Id", _Str.NewId(),
@@ -198,24 +198,24 @@ insert into dbo._FlowSign(
                 "NodeName", firstLine.FromNodeName,
                 "LevelNo", 0,
                 "TotalLevel", totalLevel,
-                "SignerId", signerId,
+                "SignerValue", signerValue,
                 "SignerName", signerName,
             });
             */
 
-            //string signerId = "", signerName = "";
+            //string signerValue = "", signerName = "";
             var level = 0;
             foreach (var idx in findIdxs)
             {
-                #region get signerId by rules
+                #region get signerValue by rules
                 var line = lines[idx];
-                var signerId = "";
+                var signerValue = "";
                 DateTime? signTime = null;
                 if (level == 0)
                 {
                     signTime = DateTime.Now;
                     if (row[userFid] != null)
-                        signerId = row[userFid].ToString();
+                        signerValue = row[userFid].ToString();
                 } 
                 else
                 {
@@ -223,33 +223,33 @@ insert into dbo._FlowSign(
                     {
                         /*
                         case EnumSignerType.User:
-                            signerId = line.SignerValue;
+                            signerValue = line.SignerValue;
                             break;
                             */
                         case SignerTypeEstr.Field:
                             if (row[line.SignerValue] != null)
-                                signerId = row[line.SignerValue].ToString();
+                                signerValue = row[line.SignerValue].ToString();
                             break;
                         case SignerTypeEstr.UserMgr:
                             if (row[userFid] != null)
-                                signerId = db.GetStr(string.Format(SqlUserMgr, row[userFid].ToString()));
+                                signerValue = db.GetStr(string.Format(SqlUserMgr, row[userFid].ToString()));
                             break;
                         case SignerTypeEstr.DeptMgr:
                             if (line.SignerValue != null)
-                                signerId = db.GetStr(string.Format(SqlDeptMgr, line.SignerValue));
+                                signerValue = db.GetStr(string.Format(SqlDeptMgr, line.SignerValue));
                             break;
                     }
                 }
                 #endregion
 
-                if (string.IsNullOrEmpty(signerId))
+                if (string.IsNullOrEmpty(signerValue))
                 {
-                    error = "cannot get signerId";
+                    error = "cannot get signerValue";
                     goto lab_exit;
                 }
 
                 //get signer Name
-                var signerName = db.GetStr(string.Format(SqlUserName, signerId));
+                var signerName = db.GetStr(string.Format(SqlUserName, signerValue));
 
                 //update db: add row
                 db.Update(sql, new List<object>() {
@@ -259,7 +259,7 @@ insert into dbo._FlowSign(
                     "NodeName", line.FromNodeName,
                     "LevelNo", level,
                     "TotalLevel", totalLevel,
-                    "SignerId", signerId,
+                    "SignerValue", signerValue,
                     "SignerName", signerName,
                     "SignTime", signTime,
                 });

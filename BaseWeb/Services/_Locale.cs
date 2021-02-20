@@ -66,7 +66,7 @@ namespace BaseWeb.Services
 
         /// <summary>
         /// locale code no dash
-        /// 從 _Code table 讀取多國語資料時會用到此 method
+        /// 從 Code table 讀取多國語資料時會用到此 method
         /// </summary>
         /// <returns></returns>
         public static string GetLocaleNoDash()

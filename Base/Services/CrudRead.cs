@@ -439,8 +439,8 @@ namespace Base.Services
                             thisWhere = string.Format("({0} is Null Or {0} Between @{1} And @{2})", col, item.Fid, fid2);
 
                             //add arg
-                            AddArg(item.Fid, _Str.GetLeft(_Date.FrontToBack(value.ToString()).ToString(), " "));
-                            AddArg(fid2, _Str.GetLeft(_Date.FrontToBack(cond[fid2].ToString()).ToString(), " ") + " 23:59:59");
+                            AddArg(item.Fid, _Str.GetLeft(_Date.CsToDt(value.ToString()).ToString(), " "));
+                            AddArg(fid2, _Str.GetLeft(_Date.CsToDt(cond[fid2].ToString()).ToString(), " ") + " 23:59:59");
                         }
                         else if (hasDate1)  //has start date, then query this date after
                         {
@@ -450,7 +450,7 @@ namespace Base.Services
                             thisWhere = string.Format("({0} is Null Or {0} >= @{1})", col, item.Fid);
 
                             //Datetime only read date part, type is string
-                            var date1 = _Date.FrontToBack(value.ToString());
+                            var date1 = _Date.CsToDt(value.ToString());
                             AddArg(item.Fid, _Str.GetLeft(date1.ToString(), " "));
                             //AddArg(fid2, _Str.RemovePart(date1.AddDays(1).ToString(), " "));
                         }
@@ -462,7 +462,7 @@ namespace Base.Services
                             thisWhere = string.Format("({0} is Null Or {0} <= @{1})", col, fid2);
 
                             //Datetime field only get date part, type is string
-                            var date1 = _Date.FrontToBack(value.ToString());
+                            var date1 = _Date.CsToDt(value.ToString());
                             AddArg(fid2, _Str.GetLeft(date1.ToString(), " ") + " 23:59:59");
                         }
                     }
@@ -504,8 +504,8 @@ namespace Base.Services
                             thisWhere = string.Format("(({0} is Null Or {0} <= @{1}) And ({2} is Null Or {2} >= @{3}))", col, fid2, col2, item.Fid);
 
                             //add arg
-                            AddArg(fid2, _Str.GetLeft(_Date.FrontToBack(cond[fid2].ToString()).ToString(), " ") + " 23:59:59");
-                            AddArg(item.Fid, _Str.GetLeft(_Date.FrontToBack(value.ToString()).ToString(), " "));
+                            AddArg(fid2, _Str.GetLeft(_Date.CsToDt(cond[fid2].ToString()).ToString(), " ") + " 23:59:59");
+                            AddArg(item.Fid, _Str.GetLeft(_Date.CsToDt(value.ToString()).ToString(), " "));
                         }
                         else if (hasDate1)  //only start date, then query bigger than this date
                         {
@@ -514,7 +514,7 @@ namespace Base.Services
                             thisWhere = string.Format("({0} is Null or {0} >= @{1})", col2, item.Fid);
 
                             //get date part of Datetime
-                            var date1 = _Date.FrontToBack(value.ToString());
+                            var date1 = _Date.CsToDt(value.ToString());
                             AddArg(item.Fid, _Str.GetLeft(date1.ToString(), " "));
                             //AddArg(fid2, _Str.RemovePart(date1.AddDays(1).ToString(), " "));
                         }
@@ -525,7 +525,7 @@ namespace Base.Services
                             thisWhere = string.Format("({0} is Null Or {0} <= @{1})", col, fid2);
 
                             //get date part of Datetime
-                            var date1 = _Date.FrontToBack(value.ToString());
+                            var date1 = _Date.CsToDt(value.ToString());
                             AddArg(fid2, _Str.GetLeft(date1.ToString(), " ") + " 23:59:59");
                             //AddArg(fid2, _Str.RemovePart(date1.AddDays(1).ToString(), " "));
                         }
